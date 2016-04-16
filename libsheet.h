@@ -1,7 +1,7 @@
 // libsheet.h
 #include <iostream>
 #include <map>
-#incldue <string>
+#include <string>
 #include <vector>
 #include <type_info>
 #include <bitset>
