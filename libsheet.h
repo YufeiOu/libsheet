@@ -51,6 +51,9 @@ public:
   
   template<typename T>
   void column_append(vector<T> new_col, string col_name);
+
+  template<typename T>
+  void print(int row, T col);
   
   
   
