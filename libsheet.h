@@ -1,73 +1,93 @@
 // libsheet.h
 #include <iostream>
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
-#include <type_info>
+#include <typeinfo>
 #include <bitset>
 using namespace std;
 
 class Sheet {
+public:
+  Sheet() {};
+  Sheet(vector<string>& entry, vector<string>& col_names);
+  Sheet(Sheet const &);
+  
+  template<typename Oper, size_t N, typename T>
+  bitset<N> filter(T column_index, Oper p) {
+    // Column index can be int or string(for column name)
+    // give column number, filter lambda expression, return a bitmap
+  }
+  
+  template<typename T, typename col_type>
+  void set(int y, col_type x, T value);
+  
+  
+  template<typename T>
+  Sheet get(int row, vector<T> cols);
+  
+  template<typename T>
+  Sheet get(int row, T col);
+  
+  template<typename T>
+  Sheet get(vector<int> rows, T cols);
+  
+  template<typename T>
+  Sheet get(vector<int> rows,  vector<T> cols);
+  
+  
+  void row_erase(int row);
+  void row_erase(vector<int> rows);
+  template<typename T>
+  void column_erase(T col);
+  
+  template<typename T>
+  void column_erase(vector<T> cols);
+  
+  void row_append(Sheet& new_sheet);
+  void column_append(Sheet& new_col);
+  
+  template<typename T>
+  void column_append(vector<T> new_col, string col_name);
+  
+  
+  
+//private:
+  map<string, unsigned int>  column_map;  // column name to index
+  
+  class ColumnHead {
+    friend class Sheet;
   public:
-    Sheet() {};
-    Sheet(vector<string>& entry);
-    Sheet(Sheet) {
+    ColumnHead(string _column_name, int _flag) : column_name(_column_name), flag(_flag) {}
+//    template<typename T>
+//    void push_back(T input);
     
-    };
-  
-    template<typename Oper, size_t N, typename T>
-    bitset<N> filter(T column_index, Oper p) {
-      // Column index can be int or string(for column name)
-      // give column number, filter lambda expression, return a bitmap
-    }
+  //private:
+    std::string column_name;
+    int flag; // int:0 double:1 string:2
     
-    template<typename T, typename col_type>
-    void set(int y, col_type x, T value);
+    vector<int> vint;
+    vector<double> vdouble;
+    vector<std::string> vstring;
+    /* other possible field */
     
-    
-    template<typename T>
-    Sheet get(int row, vector<T> cols);
-  
-    template<typename T>
-    Sheet get(int row, T col);
-  
-    template<typename T>
-    Sheet get(vecotr<int> rows, T cols);
-  
-    template<typename T>
-    Sheet get(vecotr<int> rows,  vector<T> cols);
-    
-    
-    void row_erase(int row);
-    void row_erase(vector<int> rows);
-    template<typename T>
-    void column_erase(T col);
-    
-    template<typename T>
-    void column_erase(vector<T> cols);
-  
-    void row_append(Sheet& new_sheet)
-    void column_append(Sheet& new_col);
-    
-    template<typename T>
-    void column_append(vector<T> new_col, string col_name);
-  
-  private:
-    map<string, unsigned_int>  column_map;  // column name to index
-    
-    class column_head {
-      std::string column_name;
-      int flag; // int:0 double:1 string:2
-      
-      vector<int> vint;
-      vector<double> vdouble;
-      vector<std::string> vstring;
-      /* other possible field */
-      template<typename T>
-      void push_back(vector<T> input);
-      
-    };
-    vector<column_head> columns;  
+  };
+  vector<ColumnHead> columns;
   
 };
+
+//vector<int> bit2int(bitset& filter_result);
+
+void load_data(Sheet& sheet, string path, bool header = true);
+void dump_data(Sheet& sheet, string file_path, bool header = true);
+
+void row_shuffle(Sheet& sheet, vector<int>& ref);
+
+template <typename T>
+void sort(Sheet& sheet, T cols, bool descend = true);
+
+//template <typename T, typename lambda_input>
+//void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)
+
 
