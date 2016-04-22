@@ -12,7 +12,7 @@ class Sheet {
 public:
 	Sheet() {};
 	Sheet(vector<string>& entry, vector<string>& col_names);
-	Sheet(Sheet const &);
+	// Sheet(Sheet const &);
 	
 	template<typename Oper, size_t N, typename T>
 	bitset<N> filter(T column_index, Oper p) {
@@ -20,30 +20,31 @@ public:
 		// give column number, filter lambda expression, return a bitmap
 	}
 	
-	template<typename T, typename col_type>
-	void set(int y, col_type x, T value);
+	void set(const int &y, const int& x, const int &value);
+	void set(const int &y, const int& x, const double &value);
+	void set(const int &y, const int& x, const string &value);
+	void set(const int &y, const string& x, const int &value);
+	void set(const int &y, const string& x, const double &value);
+	void set(const int &y, const string& x, const string &value);
 	
 	
-	template<typename T>
-	Sheet get(int row, vector<T> cols);
-	
-	template<typename T>
-	Sheet get(int row, T col);
-	
-	template<typename T>
-	Sheet get(vector<int> rows, T cols);
-	
-	template<typename T>
-	Sheet get(vector<int> rows,  vector<T> cols);
-	
+	Sheet get(const int& row, const vector<string>& cols);
+	Sheet get(const int& row, const vector<int>& cols);
+	Sheet get(const int& row, const string& col);
+	Sheet get(const int& row, const int& col);
+	Sheet get(const vector<int>& rows, const string& cols);
+	Sheet get(const vector<int>& rows, const int& cols);
+	Sheet get(const vector<int>& rows, const vector<string>& cols);
+	Sheet get(const vector<int>& rows, const vector<int>& cols);
 	
 	void row_erase(int row);
-	void row_erase(vector<int> rows);
-	template<typename T>
-	void column_erase(T col);
+	void row_erase(const vector<int> &rows);
 	
-	template<typename T>
-	void column_erase(vector<T> cols);
+	void column_erase(int col);
+	void column_erase(const string &col);
+	
+	void column_erase(const vector<int>& cols);
+	void column_erase(const vector<string>& cols);
 	
 	void row_append(Sheet& new_sheet);
 	void row_append(vector<string> &new_row);
@@ -51,11 +52,6 @@ public:
 	void col_append(vector<int>& new_col, const string& col_name);
 	void col_append(vector<double>& new_col, const string& col_name);
 	void col_append(vector<string>& new_col, const string& col_name);
-	
-	template<typename T>
-	void column_append(vector<T> new_col, string col_name);
-	
-	
 	
 private:
 	map<string, unsigned int>  column_map;  // column name to index
@@ -88,8 +84,8 @@ void dump_data(Sheet& sheet, const string& file_path, bool header = true);
 
 void row_shuffle(Sheet& sheet, vector<int>& ref);
 
-template <typename T>
-void sort(Sheet& sheet, T cols, bool descend = true);
+void sort(Sheet& sheet, int col, bool descend = true);
+void sort(Sheet& sheet, string col, bool descend = true);
 
 //template <typename T, typename lambda_input>
 //void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)
