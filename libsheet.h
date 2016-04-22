@@ -74,7 +74,6 @@ private:
 		
 	};
 	vector<ColumnHead> columns;
-	
 };
 
 //vector<int> bit2int(bitset& filter_result);

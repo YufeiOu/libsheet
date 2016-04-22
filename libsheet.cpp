@@ -334,7 +334,6 @@ Sheet Sheet::get(const vector<int>& rows, const int& col) {
 		throw "Unexpected type";
 	}
 	
-	
 	new_sheet.columns.push_back(ch);
 	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
 	return new_sheet;
