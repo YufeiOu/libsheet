@@ -1,7 +1,7 @@
 // libsheet.h
 #include <iostream>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -12,7 +12,7 @@ class Sheet {
 public:
 	Sheet() {};
 	Sheet(vector<string>& entry, vector<string>& col_names);
-	Sheet(Sheet const &);
+	//Sheet(Sheet const &);
 	
 	template<typename Oper, size_t N, typename T>
 	bitset<N> filter(T column_index, Oper p) {
@@ -58,7 +58,7 @@ public:
 	
 	
 private:
-	map<string, unsigned int>  column_map;  // column name to index
+	unordered_map<string, unsigned int>  column_map;  // column name to index
 	
 	class ColumnHead {
 		friend class Sheet;
@@ -78,6 +78,7 @@ private:
 		
 	};
 	vector<ColumnHead> columns;
+	
 };
 
 //vector<int> bit2int(bitset& filter_result);
@@ -92,3 +93,45 @@ void sort(Sheet& sheet, T cols, bool descend = true);
 
 //template <typename T, typename lambda_input>
 //void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)
+// Get function
+template <typename T>
+Sheet Sheet::get(int row, T col) {
+	int col_id;
+  	// Decide the input argument type
+    if (typeid(T) == typeid(string)) {
+        auto got = column_map.find(string(col));
+        if ( got == column_map.end() )
+            throw "No such column";
+        else 
+            col_id = got->second;
+    } else if (typeid(T) == typeid(int)) {
+        col_id = int(col);
+    } else throw "Illegal argument of col";
+      
+    string col_name{columns[col_id].column_name};
+  	int type_flag{columns[col_id].flag};
+
+  	ColumnHead ch = ColumnHead(col_name, type_flag);
+  	
+  	// Construct the content in ColumnHead based on the requested element type
+  	switch (type_flag) {
+		case 0:
+			ch.vint.push_back(columns[col_id].vint[row]);
+			break;
+		case 1:
+			ch.vdouble.push_back(columns[col_id].vdouble[row]);
+			break;
+		case 2:
+      ch.vstring.push_back(columns[col_id].vstring[row]);
+			break;
+		default:
+			throw "Unexpected type";
+	}
+  	
+  	Sheet new_sheet;
+  	new_sheet.columns.push_back(ch);
+  	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
+  	return new_sheet;
+}
+
+

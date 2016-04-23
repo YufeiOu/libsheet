@@ -8,8 +8,10 @@
 #include <cassert>
 #include <sstream>
 #include <algorithm>
+#include <typeinfo>
 using namespace std;
 
+// General Utility
 string trim(string& str)
 {
 	if (!str.size()) return str;
@@ -39,6 +41,56 @@ int get_type(const string& input) {
 		}
 		return found_dot ? 1 : 2;
 	}
+}
+
+// Contructor related function
+void load_data(Sheet& sheet, const string& path, bool header) {
+	ifstream in(path);
+	
+	if (in.is_open())
+	{
+		string line;
+		istringstream iss;
+		vector<string> column_name;
+		if (header) { // first line is column name
+			if (!getline(in, line)) throw "No first line";
+			iss.str(line);
+			while (iss){
+				string s;
+				if (!getline( iss, s, ',' )) break;
+				column_name.push_back( trim(s) );
+			}
+		}
+		
+		if ( !getline(in, line) ) throw "No data";
+		iss.clear();
+		iss.str(line);
+		int t = 0;
+		vector<string> data;
+		while (iss){
+			string s;
+			if ( !getline( iss, s, ',' )) break;
+			if(!header) column_name.push_back("c" + to_string(t++));
+			data.push_back( trim(s) );
+		}
+		
+		Sheet new_sheet(data, column_name);
+		
+		while ( getline (in,line) ) {
+			iss.clear();
+			iss.str(line);
+			data.clear();
+			while (iss){
+				string s;
+				if ( !getline( iss, s, ',' )) break;
+				data.push_back( trim(s) );
+			}
+			new_sheet.row_append(data);
+		}
+		in.close();
+		sheet = move(new_sheet);
+	}
+	else cout << "no file open" << endl;
 }
 
 Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
@@ -132,54 +184,6 @@ void Sheet::col_append(vector<string> &new_col, const string & col_name) {
 	columns.push_back(ch);
 }
 
-void load_data(Sheet& sheet, const string& path, bool header) {
-	ifstream in(path);
-	
-	if (in.is_open())
-	{
-		string line;
-		istringstream iss;
-		vector<string> column_name;
-		if (header) { // first line is column name
-			if (!getline(in, line)) throw "No first line";
-			iss.str(line);
-			while (iss){
-				string s;
-				if (!getline( iss, s, ',' )) break;
-				column_name.push_back( trim(s) );
-			}
-		}
-		
-		if ( !getline(in, line) ) throw "No data";
-		iss.clear();
-		iss.str(line);
-		int t = 0;
-		vector<string> data;
-		while (iss){
-			string s;
-			if ( !getline( iss, s, ',' )) break;
-			if(!header) column_name.push_back("c" + to_string(t++));
-			data.push_back( trim(s) );
-		}
-		
-		Sheet new_sheet(data, column_name);
-		
-		while ( getline (in,line) ) {
-			iss.clear();
-			iss.str(line);
-			data.clear();
-			while (iss){
-				string s;
-				if ( !getline( iss, s, ',' )) break;
-				data.push_back( trim(s) );
-			}
-			new_sheet.row_append(data);
-		}
-		in.close();
-		sheet = move(new_sheet);
-	}
-	else cout << "no file open" << endl;
-}
 
 int main (){
 	Sheet sh;
