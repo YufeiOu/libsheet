@@ -105,16 +105,16 @@ Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
 		}
 		switch (type) {
 			case 0:
-				ch.vint.push_back(stoi(*i));
-				break;
+			ch.vint.push_back(stoi(*i));
+			break;
 			case 1:
-				ch.vdouble.push_back(stod(*i));
-				break;
+			ch.vdouble.push_back(stod(*i));
+			break;
 			case 2:
-				ch.vstring.push_back(*i);
-				break;
+			ch.vstring.push_back(*i);
+			break;
 			default:
-				throw "Unexpected input type";
+			throw "Unexpected input type";
 		}
 		
 		columns.push_back(ch);
@@ -127,16 +127,16 @@ void Sheet::row_append(vector<string> &new_row) {
 	for (auto &r : new_row) {
 		switch (ch->flag) {
 			case 0:
-				ch->vint.push_back(stoi(r));
-				break;
+			ch->vint.push_back(stoi(r));
+			break;
 			case 1:
-				ch->vdouble.push_back(stod(r));
-				break;
+			ch->vdouble.push_back(stod(r));
+			break;
 			case 2:
-				ch->vstring.push_back(r);
-				break;
+			ch->vstring.push_back(r);
+			break;
 			default:
-				throw "Unexpected input type";
+			throw "Unexpected input type";
 		}
 		++ch;
 	}
@@ -184,15 +184,248 @@ void Sheet::col_append(vector<string> &new_col, const string & col_name) {
 	columns.push_back(ch);
 }
 
-
-int main (){
-	Sheet sh;
-	string s = "/Users/mcchu/Documents/16S-C++/sheet/sheet/test.txt";
-	load_data(sh, s, true);
-	vector<int> new_int_col{1, 2};
-	vector<double> new_double_col{1., 2.};
-	vector<string> new_str_col{"jefiwo", "dsf"};
-	sh.col_append(new_int_col, "new");
-	sh.col_append(new_double_col, "newd");
+// Get function
+Sheet Sheet::get(const int& row, const string& col) {
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
 	
+	string col_name{columns[col_id].column_name};
+	int type_flag{columns[col_id].flag};
+	
+	ColumnHead ch = ColumnHead(col_name, type_flag);
+	
+	// Construct the content in ColumnHead based on the requested element type
+	switch (type_flag) {
+		case 0:
+		ch.vint.push_back(columns[col_id].vint[row]);
+		break;
+		case 1:
+		ch.vdouble.push_back(columns[col_id].vdouble[row]);
+		break;
+		case 2:
+		ch.vstring.push_back(columns[col_id].vstring[row]);
+		break;
+		default:
+		throw "Unexpected type";
+	}
+	
+	Sheet new_sheet;
+	new_sheet.columns.push_back(ch);
+	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
+	return new_sheet;
+}
+
+Sheet Sheet::get(const int& row, const int& col) {
+	int col_id = col;
+	
+	string col_name{columns[col_id].column_name};
+	int type_flag{columns[col_id].flag};
+	
+	ColumnHead ch = ColumnHead(col_name, type_flag);
+	
+	// Construct the content in ColumnHead based on the requested element type
+	switch (type_flag) {
+		case 0:
+		ch.vint.push_back(columns[col_id].vint[row]);
+		break;
+		case 1:
+		ch.vdouble.push_back(columns[col_id].vdouble[row]);
+		break;
+		case 2:
+		ch.vstring.push_back(columns[col_id].vstring[row]);
+		break;
+		default:
+		throw "Unexpected type";
+	}
+	
+	Sheet new_sheet;
+	new_sheet.columns.push_back(ch);
+	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
+	return new_sheet;
+}
+
+Sheet Sheet::get(const int& row, const vector<int>& cols) {
+	
+	Sheet new_sheet;
+	for (auto i = cols.begin(); i != cols.end() ; ++i) {
+		
+		string col_name{columns[*i].column_name};
+		int type_flag{columns[*i].flag};
+		
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+			ch.vint.push_back(columns[*i].vint[row]);
+			break;
+			case 1:
+			ch.vdouble.push_back(columns[*i].vdouble[row]);
+			break;
+			case 2:
+			ch.vstring.push_back(columns[*i].vstring[row]);
+			break;
+			default:
+			throw "Unexpected type";
+		}
+		
+		
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
+	}
+	return new_sheet;
+}
+
+Sheet Sheet::get(const int& row, const vector<string>& cols) {
+	Sheet new_sheet;
+	int col_id;
+	for ( auto i = cols.begin(); i != cols.end(); ++i) {
+		auto got = column_map.find(*i);
+		if (got == column_map.end())
+		throw "No such column";
+		col_id = got->second;
+		string col_name{columns[col_id].column_name};
+		int type_flag{columns[col_id].flag};
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+			ch.vint.push_back(columns[col_id].vint[row]);
+			break;
+			case 1:
+			ch.vdouble.push_back(columns[col_id].vdouble[row]);
+			break;
+			case 2:
+			ch.vstring.push_back(columns[col_id].vstring[row]);
+			break;
+			default:
+			throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
+	}
+	return new_sheet;
+}
+
+Sheet Sheet::get(const vector<int>& rows, const int& col) {
+	
+	string col_name{columns[col].column_name};
+	int type_flag{columns[col].flag};
+	
+	ColumnHead ch = ColumnHead(col_name, type_flag);
+	
+	Sheet new_sheet;
+	
+	// Construct the content in ColumnHead based on the requested element type
+	switch (type_flag) {
+		case 0:
+		    for (auto &i : rows) ch.vint.push_back(columns[col].vint[i]);
+		    break;
+		case 1:
+		    for (auto &i : rows) ch.vdouble.push_back(columns[col].vdouble[i]);
+		    break;
+		case 2:
+		    for (auto &i : rows) ch.vstring.push_back(columns[col].vstring[i]);
+		    break;
+		default:
+		throw "Unexpected type";
+	}
+	
+	new_sheet.columns.push_back(ch);
+	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
+	return new_sheet;
+}
+
+Sheet Sheet::get(const vector<int>& rows, const string& col) {
+	
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+	throw "No such column";
+	int col_id = got->second;
+	
+	string col_name{columns[col_id].column_name};
+	int type_flag{columns[col_id].flag};
+	
+	ColumnHead ch = ColumnHead(col_name, type_flag);
+	
+	Sheet new_sheet;
+		
+    // Construct the content in ColumnHead based on the requested element type
+	switch (type_flag) {
+		case 0:
+			for (auto i : rows) ch.vint.push_back(columns[col_id].vint[i]);
+			break;
+		case 1:
+			for (auto i : rows) ch.vdouble.push_back(columns[col_id].vdouble[i]);
+		    break;
+		case 2:
+			for (auto i : rows) ch.vstring.push_back(columns[col_id].vstring[i]);
+			break;
+		default:
+			throw "Unexpected type";
+	}
+	new_sheet.columns.push_back(ch);
+	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
+	return new_sheet;
+}
+
+Sheet Sheet::get(const vector<int>& rows, const vector<string>& cols) {
+	Sheet new_sheet;
+	int col_id;
+	for ( auto i = cols.begin(); i != cols.end(); ++i) {
+		auto got = column_map.find(*i);
+		if (got == column_map.end())
+		throw "No such column";
+		col_id = got->second;
+		
+		string col_name{columns[col_id].column_name};
+		int type_flag{columns[col_id].flag};
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+			for (auto& r : rows) ch.vint.push_back(columns[col_id].vint[r]);
+			break;
+			case 1:
+			for (auto& r : rows) ch.vdouble.push_back(columns[col_id].vdouble[r]);
+			break;
+			case 2:
+			for (auto &r: rows) ch.vstring.push_back(columns[col_id].vstring[r]);
+			break;
+			default:
+			throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
+	}
+	return new_sheet;
+}
+
+Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
+	Sheet new_sheet;
+	for ( auto i = cols.begin(); i != cols.end(); ++i) {
+		string col_name{columns[*i].column_name};
+		int type_flag{columns[*i].flag};
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+			for (auto& r : rows) ch.vint.push_back(columns[*i].vint[r]);
+			break;
+			case 1:
+			for (auto& r : rows) ch.vdouble.push_back(columns[*i].vdouble[r]);
+			break;
+			case 2:
+			for (auto &r: rows) ch.vstring.push_back(columns[*i].vstring[r]);
+			break;
+			default:
+			throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
+	}
+	return new_sheet;
 }
