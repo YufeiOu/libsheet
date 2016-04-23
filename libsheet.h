@@ -1,7 +1,7 @@
 // libsheet.h
 #include <iostream>
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -54,7 +54,7 @@ public:
 	void col_append(vector<string>& new_col, const string& col_name);
 	
 private:
-	map<string, unsigned int>  column_map;  // column name to index
+	unordered_map<string, unsigned int>  column_map;  // column name to index
 	
 	class ColumnHead {
 		friend class Sheet;
