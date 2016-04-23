@@ -89,7 +89,7 @@ void test_sort(Sheet sh){
 	sh.print();
 	cout << "-----------------" << endl;
 	
-	sh.sort_by_column(0, true);
+	sh.sort_by_column("col1", true);
 	
 	sh.print();
 	cout << "=================" << endl;

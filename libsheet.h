@@ -54,7 +54,7 @@ public:
 	void col_append(vector<string>& new_col, const string& col_name);
 	
 	void sort_by_column(int col, bool descend = false);
-	void sort_by_column(string col, bool descend = false);
+	void sort_by_column(const string& col, bool descend = false);
 	
 private:
 	unordered_map<string, unsigned int>  column_map;  // column name to index

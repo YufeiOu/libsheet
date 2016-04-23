@@ -634,7 +634,7 @@ void Sheet::set(const int& row, const string& col, const string& value) {
 
 /* ---Algorithm--- */
 
-/* sort */
+/* sort 1/2 - by col_id */
 void Sheet::sort_by_column(int col, bool descend) {
 	vector<int> indices;
 	switch (columns.at(col).flag) {
@@ -675,6 +675,87 @@ void Sheet::sort_by_column(int col, bool descend) {
 		case 2:
 		{
 			vector<string>& vs = columns.at(col).vstring;
+			vector<pair<string,int> > vp;
+			for (size_t i = 0 ; i != vs.size() ; ++i) {
+				vp.push_back(make_pair(vs[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<string, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		default:
+			throw "Unexpected type";
+	}
+	for (auto &c : columns) {
+		switch (c.flag) {
+			case 0:
+				reorder(indices, c.vint);
+				break;
+			case 1:
+				reorder(indices, c.vdouble);
+				break;
+			case 2:
+				reorder(indices, c.vstring);
+				break;
+			default:
+				throw "Unexpected type";
+		}
+	}
+}
+
+/* sort 2/2 - by col_name */
+void Sheet::sort_by_column(const string& col, bool descend) {
+	vector<int> indices;
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	switch (columns.at(col_id).flag) {
+		case 0:
+		{
+			vector<int>& vi = columns.at(col_id).vint;
+			vector<pair<int,int> > vp;
+			for (size_t i = 0 ; i != vi.size() ; ++i) {
+				vp.push_back(make_pair(vi[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<int, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		case 1:
+		{
+			vector<double>& vd = columns.at(col_id).vdouble;
+			vector<pair<double,int> > vp;
+			for (size_t i = 0 ; i != vd.size() ; ++i) {
+				vp.push_back(make_pair(vd[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<double, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		case 2:
+		{
+			vector<string>& vs = columns.at(col_id).vstring;
 			vector<pair<string,int> > vp;
 			for (size_t i = 0 ; i != vs.size() ; ++i) {
 				vp.push_back(make_pair(vs[i], i));
