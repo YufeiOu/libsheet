@@ -27,7 +27,6 @@ public:
 	void set(const int &y, const string& x, const double &value);
 	void set(const int &y, const string& x, const string &value);
 	
-	
 	Sheet get(const int& row, const vector<string>& cols);
 	Sheet get(const int& row, const vector<int>& cols);
 	Sheet get(const int& row, const string& col);
