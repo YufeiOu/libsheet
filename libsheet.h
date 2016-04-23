@@ -19,14 +19,14 @@ public:
 		// Column index can be int or string(for column name)
 		// give column number, filter lambda expression, return a bitmap
 	}
-  void print(bool header = true);
+    void print(bool header = true);
 	
 	void set(const int &y, const int& x, const int &value);
-  void set(const int &y, const int& x, const double &value);
-  void set(const int &y, const int& x, const string &value);
-  void set(const int &y, const string& x, const int &value);
-  void set(const int &y, const string& x, const double &value);
-  void set(const int &y, const string& x, const string &value);
+    void set(const int &y, const int& x, const double &value);
+    void set(const int &y, const int& x, const string &value);
+    void set(const int &y, const string& x, const int &value);
+    void set(const int &y, const string& x, const double &value);
+    void set(const int &y, const string& x, const string &value);
 	
 	Sheet get(const int& row, const vector<string>& cols);
 	Sheet get(const int& row, const vector<int>& cols);
@@ -40,11 +40,11 @@ public:
 	void row_erase(int row);
 	void row_erase(const vector<int> &rows);
   
-	void column_erase(int col);
-  void column_erase(const string &col);
+	void col_erase(int col);
+    void col_erase(const string &col);
 
-	void column_erase(const vector<int>& cols);
-  void column_erase(const vector<string>& cols);
+	void col_erase(const vector<int>& cols);
+    void col_erase(const vector<string>& cols);
 	
 	void row_append(Sheet& new_sheet);
 	void row_append(vector<string> &new_row);

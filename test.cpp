@@ -16,6 +16,21 @@ void test_colappend(Sheet sh){
 	cout << "=================" << endl;
 }
 
+void test_colerase(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	vector<int> int_cols{0, 2};
+	vector<string> str_cols{"col1"};
+	sh.col_erase(5);
+	sh.col_erase("col3");
+	sh.col_erase(int_cols);
+	sh.col_erase(str_cols);
+	
+	sh.print();
+	cout << "=================" << endl;
+}
+
 void test_get(Sheet sh){
 	Sheet element1 = sh.get(1, "col3");
 	Sheet element2 = sh.get(0, 0);
@@ -50,17 +65,33 @@ void test_set(Sheet sh){
 	cout << "=================" << endl;
 }
 
+void test_rowerase(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	sh.row_erase(1);
+	
+	sh.print();
+	cout << "=================" << endl;
+}
+
 int main(){
 	Sheet sh;
 	string s = "/Users/mcchu/Documents/16S-C++/sheet/sheet/test.txt";
 	load_data(sh, s, true);
 	
 	// col_append example
-	test_colappend(sh);
+	//test_colappend(sh);
+	
+	// col_erase example
+	//test_colerase(sh);
 	
 	// get example
-	test_get(sh);
+	//test_get(sh);
 
 	// set example
-	test_set(sh);
+	//test_set(sh);
+	
+	// row_erase
+	//test_rowerase(sh);
 }
