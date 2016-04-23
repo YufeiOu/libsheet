@@ -38,7 +38,7 @@ public:
 	Sheet get(const vector<int>& rows, const vector<int>& cols);
 	
 	void row_erase(int row);
-	void row_erase(const vector<int> &rows);
+	void row_erase(vector<int> &rows);
   
 	void col_erase(int col);
     void col_erase(const string &col);
@@ -52,6 +52,9 @@ public:
 	void col_append(vector<int>& new_col, const string& col_name);
 	void col_append(vector<double>& new_col, const string& col_name);
 	void col_append(vector<string>& new_col, const string& col_name);
+	
+	void sort_by_column(int col, bool descend = false);
+	void sort_by_column(string col, bool descend = false);
 	
 private:
 	unordered_map<string, unsigned int>  column_map;  // column name to index
@@ -82,10 +85,14 @@ private:
 void load_data(Sheet& sheet, const string& path, bool header = true);
 void dump_data(Sheet& sheet, const string& file_path, bool header = true);
 
-void row_shuffle(Sheet& sheet, vector<int>& ref);
-
-void sort(Sheet& sheet, int col, bool descend = true);
-void sort(Sheet& sheet, string col, bool descend = true);
+template <typename T>
+void reorder(const vector<int>& indices, vector<T>& vec) {
+	vector<T> new_vec;
+	for (int i = 0; i < indices.size(); ++i) {
+		new_vec.push_back(vec.at(indices.at(i)));
+	}
+	vec = new_vec;
+};
 
 //template <typename T, typename lambda_input>
 //void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)

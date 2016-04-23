@@ -2,7 +2,7 @@
 #include "libsheet.h"
 using namespace std;
 
-void test_colappend(Sheet sh){
+void test_colappend(Sheet &sh){
 	sh.print();
 	cout << "-----------------" << endl;
 	
@@ -22,10 +22,10 @@ void test_colerase(Sheet sh){
 	
 	vector<int> int_cols{0, 2};
 	vector<string> str_cols{"col1"};
-	sh.col_erase(5);
-	sh.col_erase("col3");
-	sh.col_erase(int_cols);
-	sh.col_erase(str_cols);
+	sh.col_erase(1);
+	//sh.col_erase("col3");
+	//sh.col_erase(int_cols);
+	//sh.col_erase(str_cols);
 	
 	sh.print();
 	cout << "=================" << endl;
@@ -69,7 +69,27 @@ void test_rowerase(Sheet sh){
 	sh.print();
 	cout << "-----------------" << endl;
 	
-	sh.row_erase(1);
+	vector<int> rows{0, 3};
+	sh.row_erase(rows);
+	
+	sh.print();
+	cout << "=================" << endl;
+}
+
+void test_reorder(){
+	
+	vector<int> indices{0, 2, 1, 4, 3};
+	vector<int> vec1{1, 2, 3, 4, 5};
+	cout << vec1[0] << vec1[1] << vec1[2] << vec1[3] << vec1[4] << endl;
+	reorder(indices, vec1);
+	cout << vec1[0] << vec1[1] << vec1[2] << vec1[3] << vec1[4] << endl;
+}
+
+void test_sort(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	sh.sort_by_column(0, true);
 	
 	sh.print();
 	cout << "=================" << endl;
@@ -77,7 +97,7 @@ void test_rowerase(Sheet sh){
 
 int main(){
 	Sheet sh;
-	string s = "/Users/mcchu/Documents/16S-C++/sheet/sheet/test.txt";
+	string s = "/Users/mcchu/Documents/16S-C++/libsheet/test.txt";
 	load_data(sh, s, true);
 	
 	// col_append example
@@ -92,6 +112,12 @@ int main(){
 	// set example
 	//test_set(sh);
 	
+	// reorder
+	//test_reorder();
+	
 	// row_erase
 	//test_rowerase(sh);
+	
+	// sort
+	test_sort(sh);
 }

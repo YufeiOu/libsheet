@@ -257,7 +257,7 @@ void Sheet::row_erase(int row) {
 }
 
 /* row erase - 2/2 (rows) */
-void Sheet::row_erase(const vector<int>& rows) {
+void Sheet::row_erase(vector<int>& rows) {
 	sort(rows.begin(), rows.end());
 	int j = 0;
 	for (auto &r : rows) {
@@ -514,7 +514,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 }
 
 void Sheet::print(bool header) {
-	if (columns.size()) return;
+	if (!columns.size()) return;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	
 	if (header) {
@@ -629,5 +629,82 @@ void Sheet::set(const int& row, const string& col, const string& value) {
 			break;
 		default:
 			throw "Type does not match! Expect string";
+	}
+}
+
+/* ---Algorithm--- */
+
+/* sort */
+void Sheet::sort_by_column(int col, bool descend) {
+	vector<int> indices;
+	switch (columns.at(col).flag) {
+		case 0:
+		{
+			vector<int>& vi = columns.at(col).vint;
+			vector<pair<int,int> > vp;
+			for (size_t i = 0 ; i != vi.size() ; ++i) {
+				vp.push_back(make_pair(vi[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<int, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		case 1:
+		{
+			vector<double>& vd = columns.at(col).vdouble;
+			vector<pair<double,int> > vp;
+			for (size_t i = 0 ; i != vd.size() ; ++i) {
+				vp.push_back(make_pair(vd[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<double, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		case 2:
+		{
+			vector<string>& vs = columns.at(col).vstring;
+			vector<pair<string,int> > vp;
+			for (size_t i = 0 ; i != vs.size() ; ++i) {
+				vp.push_back(make_pair(vs[i], i));
+			}
+			if (descend) {
+				sort(vp.begin(), vp.end(), greater<pair<string, int>>());
+			} else {
+				sort(vp.begin(), vp.end());
+			}
+			for (auto &p : vp) {
+				indices.push_back(p.second);
+			}
+			break;
+		}
+		default:
+			throw "Unexpected type";
+	}
+	for (auto &c : columns) {
+		switch (c.flag) {
+			case 0:
+				reorder(indices, c.vint);
+				break;
+			case 1:
+				reorder(indices, c.vdouble);
+				break;
+			case 2:
+				reorder(indices, c.vstring);
+				break;
+			default:
+				throw "Unexpected type";
+		}
 	}
 }
