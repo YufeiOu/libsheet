@@ -432,7 +432,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 }
 
 void Sheet::print(bool header) {
-  	if (columns.size()) return;
+  	if (!columns.size()) return;
     int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
     
     if (header) {
