@@ -2,7 +2,7 @@
 #include "libsheet.h"
 using namespace std;
 
-void test1(Sheet sh){
+void test_construct(Sheet sh){
 	vector<int> new_int_col{1, 2};
 	vector<double> new_double_col{1., 2.};
 	vector<string> new_str_col{"jefiwo", "dsf"};
@@ -10,7 +10,7 @@ void test1(Sheet sh){
 	sh.col_append(new_double_col, "newd");
 }
 
-void test2(Sheet sh){
+void test_get(Sheet sh){
 	Sheet element1 = sh.get(1, "col3");
 	Sheet element2 = sh.get(0, 0);
 	
@@ -29,15 +29,28 @@ void test2(Sheet sh){
 	
 }
 
+void test_set(Sheet sh){
+	sh.print();
+	sh.set(0, 0, 12345);
+	sh.set(0, 1, 12345.6789);
+	sh.set(0, 2, "We_love_C++");
+	sh.set(1, "col1", "set_a_different_int");
+	sh.set(1, "col2", "set_a_different_double");
+	sh.set(1, "col3", "set_a_different_string");
+	sh.print();
+}
+
 int main(){
 	Sheet sh;
 	string s = "/Users/mcchu/Documents/16S-C++/sheet/sheet/test.txt";
 	load_data(sh, s, true);
 	
 	// col_append example
-	test1(sh);
+	test_construct(sh);
 	
 	// get example
-	test2(sh);
-	
+	test_get(sh);
+
+	// set example
+	test_set(sh);
 }
