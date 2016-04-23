@@ -334,6 +334,7 @@ Sheet Sheet::get(const vector<int>& rows, const int& col) {
 		throw "Unexpected type";
 	}
 	
+	
 	new_sheet.columns.push_back(ch);
 	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
 	return new_sheet;
@@ -428,4 +429,123 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
 	}
 	return new_sheet;
+}
+
+void Sheet::print(bool header) {
+  	if (columns.size()) return;
+    int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+    
+    if (header) {
+        for (auto c = 0; c < columns.size() - 1;  ++c) {
+            cout << columns[c].column_name << ", ";
+        }
+      	cout << columns[columns.size() - 1].column_name << endl;
+    }
+  	
+    for (auto r = 0; r < row_len ; ++r) {
+        for (auto c = 0; c < columns.size();  ++c) {
+            switch (columns[c].flag) {
+               case 0:
+                   cout << columns[c].vint[r];
+                   break;
+               case 1:
+                   cout << columns[c].vdouble[r];
+                   break;
+               case 2:
+                   cout << columns[c].vstring[r];
+                   break;
+               default:
+                   throw "Unexpected type";
+            }
+          	if (c < columns.size() - 1) cout << ", ";
+            else cout << endl;
+        }
+    }
+}
+
+void Sheet::set(const int& row, const int& col, const int& value) {
+	int col_id = col;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 0:
+			columns[col_id].vint[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect int";
+	}
+}
+
+void Sheet::set(const int& row, const int& col, const double& value) {
+	int col_id = col;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 1:
+			columns[col_id].vdouble[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect double";
+	}
+}
+
+void Sheet::set(const int& row, const int& col, const string& value) {
+	int col_id = col;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 2:
+			columns[col_id].vstring[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect string";
+	}
+}
+
+void Sheet::set(const int& row, const string& col, const int& value) {
+  	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	int col_id = got->second;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 0:
+			columns[col_id].vint[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect int";
+	}
+}
+
+void Sheet::set(const int& row, const string& col, const double& value) {
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	int col_id = got->second;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 1:
+			columns[col_id].vdouble[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect double";
+	}
+}
+
+void Sheet::set(const int& row, const string& col, const string& value) {
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	int col_id = got->second;
+	int type_flag{columns[col_id].flag};
+
+	switch (type_flag) {
+		case 2:
+			columns[col_id].vstring[row] = value;
+			break;
+		default:
+			throw "Type does not match! Expect string";
+	}
 }

@@ -1,7 +1,7 @@
 // libsheet.h
 #include <iostream>
 #include <functional>
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -19,13 +19,14 @@ public:
 		// Column index can be int or string(for column name)
 		// give column number, filter lambda expression, return a bitmap
 	}
+  void print(bool header = true);
 	
 	void set(const int &y, const int& x, const int &value);
-	void set(const int &y, const int& x, const double &value);
-	void set(const int &y, const int& x, const string &value);
-	void set(const int &y, const string& x, const int &value);
-	void set(const int &y, const string& x, const double &value);
-	void set(const int &y, const string& x, const string &value);
+  void set(const int &y, const int& x, const double &value);
+  void set(const int &y, const int& x, const string &value);
+  void set(const int &y, const string& x, const int &value);
+  void set(const int &y, const string& x, const double &value);
+  void set(const int &y, const string& x, const string &value);
 	
 	Sheet get(const int& row, const vector<string>& cols);
 	Sheet get(const int& row, const vector<int>& cols);
@@ -38,12 +39,12 @@ public:
 	
 	void row_erase(int row);
 	void row_erase(const vector<int> &rows);
-	
+  
 	void column_erase(int col);
-	void column_erase(const string &col);
-	
+  void column_erase(const string &col);
+
 	void column_erase(const vector<int>& cols);
-	void column_erase(const vector<string>& cols);
+  void column_erase(const vector<string>& cols);
 	
 	void row_append(Sheet& new_sheet);
 	void row_append(vector<string> &new_row);
@@ -53,7 +54,7 @@ public:
 	void col_append(vector<string>& new_col, const string& col_name);
 	
 private:
-	unordered_map<string, unsigned int>  column_map;  // column name to index
+	map<string, unsigned int>  column_map;  // column name to index
 	
 	class ColumnHead {
 		friend class Sheet;
@@ -86,4 +87,5 @@ void row_shuffle(Sheet& sheet, vector<int>& ref);
 void sort(Sheet& sheet, int col, bool descend = true);
 void sort(Sheet& sheet, string col, bool descend = true);
 
-
+//template <typename T, typename lambda_input>
+//void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)
