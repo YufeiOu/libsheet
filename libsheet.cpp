@@ -513,6 +513,89 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 	return new_sheet;
 }
 
+Sheet Sheet::get_row(const vector<int>& rows) {
+	Sheet new_sheet;
+	for (auto c = columns.begin(); c != columns.end(); ++c) {
+		ColumnHead ch = ColumnHead(c->column_name, c->flag);
+		switch (c->flag) {
+			case 0:
+				for (auto& r : rows) ch.vint.push_back(c->vint.at(r));
+				break;
+			case 1:
+				for (auto& r : rows) ch.vdouble.push_back(c->vdouble.at(r));
+				break;
+			case 2:
+				for (auto& r : rows) ch.vstring.push_back(c->vstring.at(r));
+				break;
+			default:
+				throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(c->column_name, c - columns.begin()));
+	}
+	return new_sheet;
+}
+
+Sheet Sheet::get_column(const vector<int>& cols){
+	Sheet new_sheet;
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	for (auto c = 0; c < cols.size(); ++c) {
+		string col_name{columns.at(cols.at(c)).column_name};
+		int type_flag{columns.at(cols.at(c)).flag};
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+				for (auto r = 0; r < row_len; ++r) ch.vint.push_back(columns.at(cols.at(c)).vint.at(r));
+				break;
+			case 1:
+				for (auto r = 0; r < row_len; ++r) ch.vdouble.push_back(columns.at(cols.at(c)).vdouble.at(r));
+				break;
+			case 2:
+				for (auto r = 0; r < row_len; ++r) ch.vstring.push_back(columns.at(cols.at(c)).vstring.at(r));
+				break;
+			default:
+				throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, c));
+	}
+	return new_sheet;
+}
+
+Sheet Sheet::get_column(const vector<string>& cols){
+	Sheet new_sheet;
+	int col_id;
+	
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	for (auto i = cols.begin(); i != cols.end(); ++i) {
+		auto got = column_map.find(*i);
+		if (got == column_map.end())
+			throw "No such column";
+		col_id = got->second;
+		string col_name{columns.at(col_id).column_name};
+		int type_flag{columns.at(col_id).flag};
+		ColumnHead ch = ColumnHead(col_name, type_flag);
+		// Construct the content in ColumnHead based on the requested element type
+		switch (type_flag) {
+			case 0:
+				for (auto r = 0; r < row_len; ++r) ch.vint.push_back(columns.at(col_id).vint.at(r));
+				break;
+			case 1:
+				for (auto r = 0; r < row_len; ++r) ch.vdouble.push_back(columns.at(col_id).vdouble.at(r));
+				break;
+			case 2:
+				for (auto r = 0; r < row_len; ++r) ch.vstring.push_back(columns.at(col_id).vstring.at(r));
+				break;
+			default:
+				throw "Unexpected type";
+		}
+		new_sheet.columns.push_back(ch);
+		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
+	}
+	return new_sheet;
+}
+
 void Sheet::print(bool header) {
 	if (!columns.size()) return;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
@@ -788,4 +871,34 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 				throw "Unexpected type";
 		}
 	}
+}
+
+// filter by mask
+Sheet Sheet::filter(vector<bool>& vb) {
+	vector<int> indices;
+	for (auto r = 0; r < vb.size(); ++r) {
+		if (vb[r]) indices.push_back(r);
+	}
+	return get_row(indices);
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::get_mask(int col, Function fn){
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col);
+	switch (ch.flag) {
+		case 0:
+			for (auto& r : ch.vint) result.push_back(fn(r));
+			break;
+		case 1:
+			for (auto& r : ch.vdouble) result.push_back(fn(r));
+			break;
+		case 2:
+			for (auto& r : ch.vstring) result.push_back(fn(r));
+			break;
+		default:
+			throw "Unexpected type";
+	}
+	return result;
 }

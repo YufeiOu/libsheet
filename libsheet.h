@@ -19,6 +19,16 @@ public:
 		// Column index can be int or string(for column name)
 		// give column number, filter lambda expression, return a bitmap
 	}
+	
+	// get mask, used for filter on many coditions
+	template <typename Function>
+	vector<bool> get_mask(int col, Function fn);
+	template <typename Function>
+	vector<bool> get_mask(string col, Function fn);
+	
+	// get sheet by mask
+	Sheet filter(vector<bool>& vb);
+	
     void print(bool header = true);
 	
 	void set(const int &y, const int& x, const int &value);
@@ -36,6 +46,11 @@ public:
 	Sheet get(const vector<int>& rows, const int& cols);
 	Sheet get(const vector<int>& rows, const vector<string>& cols);
 	Sheet get(const vector<int>& rows, const vector<int>& cols);
+	Sheet get_row(const int& row);
+	Sheet get_column(const int& col);
+	Sheet get_row(const vector<int>& rows);
+	Sheet get_column(const vector<int>& cols);
+    Sheet get_column(const vector<string>& cols);
 	
 	void row_erase(int row);
 	void row_erase(vector<int> &rows);

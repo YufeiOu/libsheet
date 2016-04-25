@@ -50,6 +50,33 @@ void test_get(Sheet sh){
 	
 }
 
+void test_getRow(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	vector<int> new_rows{0, 2};
+	Sheet rows = sh.get_row(new_rows);
+	
+	rows.print();
+	cout << "=================" << endl;
+	
+}
+
+void test_getCol(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	vector<int> new_cols{1, 2};
+	Sheet cols = sh.get_column(new_cols);
+	
+	vector<string> new_cols_str{"col1", "col3"};
+	Sheet cols2 = sh.get_column(new_cols_str);
+	
+	cols.print();
+	cols2.print();
+	cout << "=================" << endl;
+}
+
 void test_set(Sheet sh){
 	sh.print();
 	cout << "-----------------" << endl;
@@ -95,6 +122,16 @@ void test_sort(Sheet sh){
 	cout << "=================" << endl;
 }
 
+void test_mask(Sheet sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	
+	
+	sh.print();
+	cout << "=================" << endl;
+}
+
 int main(){
 	Sheet sh;
 	string s = "/Users/mcchu/Documents/16S-C++/libsheet/test.txt";
@@ -119,5 +156,10 @@ int main(){
 	//test_rowerase(sh);
 	
 	// sort
-	test_sort(sh);
+	//test_sort(sh);
+	
+	// get row/ column
+	test_getRow(sh);
+	test_getCol(sh);
+	
 }
