@@ -30,6 +30,20 @@ public:
 	template <typename Function>
 	vector<bool> sselect(string col, Function fn);
 	
+	// apply functions
+	template <typename Function>
+	void iapply(int col, Function fn);
+	template <typename Function>
+	void dapply(int col, Function fn);
+	template <typename Function>
+	void sapply(int col, Function fn);
+	template <typename Function>
+	void iapply(string col, Function fn);
+	template <typename Function>
+	void dapply(string col, Function fn);
+	template <typename Function>
+	void sapply(string col, Function fn);
+	
 	// get sheet by mask
 	Sheet filter(const vector<bool>& vb);
 	
@@ -183,6 +197,54 @@ vector<bool> Sheet::sselect(string col, Function fn){
 	ColumnHead& ch = columns.at(col_id);
 	for (auto& r : ch.vstring) result.push_back(fn(r));
 	return result;
+}
+
+template <typename Function>
+void Sheet::iapply(int col, Function fn){
+	for (auto& c : columns.at(col).vint) fn(c);
+}
+
+template <typename Function>
+void Sheet::dapply(int col, Function fn){
+	for (auto& c : columns.at(col).vdouble) fn(c);
+}
+
+template <typename Function>
+void Sheet::sapply(int col, Function fn){
+	for (auto& c : columns.at(col).vstring) fn(c);
+}
+
+template <typename Function>
+void Sheet::iapply(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	for (auto& c : columns.at(col_id).vint) fn(c);
+}
+
+template <typename Function>
+void Sheet::dapply(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	for (auto& c : columns.at(col_id).vdouble) fn(c);
+}
+
+template <typename Function>
+void Sheet::sapply(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	for (auto& c : columns.at(col_id).vstring) fn(c);
 }
 
 vector<bool> operator&&(const vector<bool>& mask1, const vector<bool>& mask2);

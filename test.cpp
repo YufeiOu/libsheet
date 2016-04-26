@@ -156,6 +156,23 @@ void test_mask(Sheet sh){
 	cout << "=================" << endl;
 }
 
+void addOne(int& i){
+	i += 1;
+}
+
+void test_apply(Sheet  sh){
+	sh.print();
+	cout << "-----------------" << endl;
+	
+	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
+	sh.iapply(0, addOne);
+	sh.dapply(1, [](double& i){i += 1;});
+	sh.sapply(2, [](string& str){str = str.substr(1);});
+	
+	sh.print();
+	cout << "=================" << endl;
+}
+
 int main(){
 	Sheet sh;
 	string s = "/Users/mcchu/Documents/16S-C++/libsheet/test.txt";
@@ -183,10 +200,13 @@ int main(){
 	//test_sort(sh);
 	
 	// get row/ column
-	test_getRow(sh);
-	test_getCol(sh);
+	//test_getRow(sh);
+	//test_getCol(sh);
 	
 	// get_mask
 	test_mask(sh);
+	
+	// apply
+	test_apply(sh);
 	
 }
