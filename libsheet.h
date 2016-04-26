@@ -14,22 +14,44 @@ public:
 	Sheet(vector<string>& entry, vector<string>& col_names);
 	// Sheet(Sheet const &);
 	
-	template<typename Oper, size_t N, typename T>
-	bitset<N> filter(T column_index, Oper p) {
-		// Column index can be int or string(for column name)
-		// give column number, filter lambda expression, return a bitmap
-	}
-	
 	// get mask, used for filter on many coditions
 	template <typename Function>
-	vector<bool> get_mask(int col, Function fn);
+	vector<bool> iselect(int col, Function fn);
 	template <typename Function>
-	vector<bool> get_mask(string col, Function fn);
+	vector<bool> iselect(string col, Function fn);
+	
+	template <typename Function>
+	vector<bool> dselect(int col, Function fn);
+	template <typename Function>
+	vector<bool> dselect(string col, Function fn);
+	
+	template <typename Function>
+	vector<bool> sselect(int col, Function fn);
+	template <typename Function>
+	vector<bool> sselect(string col, Function fn);
+
+	template <typename Function>
+	void iapply(int col, Function fn);
+  
+  template <typename Function>
+	void dapply(int col, Function fn);
+  
+  template <typename Function>
+	void sapply(int col, Function fn);
+	
+  template <typename Function>
+	void iapply(string col, Function fn);
+  
+  template <typename Function>
+	void dapply(string col, Function fn);
+  
+  template <typename Function>
+	void sapply(string col, Function fn);
 	
 	// get sheet by mask
-	Sheet filter(vector<bool>& vb);
+	Sheet filter(const vector<bool>& vb);
 	
-    void print(bool header = true);
+  void print(bool header = true);
 	
 	void set(const int &y, const int& x, const int &value);
     void set(const int &y, const int& x, const double &value);
@@ -109,5 +131,176 @@ void reorder(const vector<int>& indices, vector<T>& vec) {
 	vec = new_vec;
 };
 
+// get mask, used for filter on many coditions
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::iselect(int col, Function fn){
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col);
+	for (auto& r : ch.vint) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::dselect(int col, Function fn){
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col);
+	for (auto& r : ch.vdouble) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::sselect(int col, Function fn){
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col);
+	for (auto& r : ch.vstring) result.push_back(fn(r));
+	return result;
+}
+
+template <typename Function>
+vector<bool> Sheet::iselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vint) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::dselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vdouble) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::sselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vstring) result.push_back(fn(r));
+	return result;
+}
+
+template <typename Function>
+vector<bool> Sheet::iselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vint) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::dselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vdouble) result.push_back(fn(r));
+	return result;
+}
+
+// Get mask function
+template <typename Function>
+vector<bool> Sheet::sselect(string col, Function fn){
+	int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+	
+	vector<bool> result;
+	ColumnHead& ch = columns.at(col_id);
+	for (auto& r : ch.vstring) result.push_back(fn(r));
+	return result;
+}
+
+template <typename Function>
+void Sheet::iapply(int col, Function fn){
+  for (auto& c : columns.at(col).vint) fn(c);
+}
+
+template <typename Function>
+void Sheet::dapply(int col, Function fn){
+  for (auto& c : columns.at(col).vdouble) fn(c);
+}
+
+template <typename Function>
+void Sheet::sapply(int col, Function fn){
+  for (auto& c : columns.at(col).vstring) fn(c);
+}
+
+template <typename Function>
+void Sheet::iapply(string col, Function fn){
+  int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+  
+  for (auto& c : columns.at(col_id).vint) fn(c);
+}
+
+template <typename Function>
+void Sheet::dapply(string col, Function fn){
+  int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+  
+  for (auto& c : columns.at(col_id).vdouble) fn(c);
+}
+
+template <typename Function>
+void Sheet::sapply(string col, Function fn){
+  int col_id;
+	auto got = column_map.find(col);
+	if (got == column_map.end())
+		throw "No such column";
+	col_id = got->second;
+  
+  for (auto& c : columns.at(col_id).vstring) fn(c);
+}
+
+
+vector<bool> operator&&(const vector<bool>& mask1, const vector<bool>& mask2);
+vector<bool> operator||(const vector<bool>& mask1, const vector<bool>& mask2);
+vector<bool> operator!(const vector<bool>& mask1);
+
 //template <typename T, typename lambda_input>
 //void apply(Sheet& sheet, T column_num, function<bool (lambda_input)> func)
+
+

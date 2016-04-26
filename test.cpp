@@ -1,4 +1,5 @@
 #include <iostream>
+#include <functional>
 #include "libsheet.h"
 using namespace std;
 
@@ -126,7 +127,7 @@ void test_mask(Sheet sh){
 	sh.print();
 	cout << "-----------------" << endl;
 	
-	
+	sh.filter(sh.get_mask(0, [](int i ){return i > 1;}));
 	
 	sh.print();
 	cout << "=================" << endl;
@@ -159,7 +160,10 @@ int main(){
 	//test_sort(sh);
 	
 	// get row/ column
-	test_getRow(sh);
-	test_getCol(sh);
+	//test_getRow(sh);
+	//test_getCol(sh);
+
+	// Filter
+	test_mask(sh);
 	
 }
