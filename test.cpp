@@ -157,13 +157,21 @@ void test_mask(Sheet sh){
 	cout << "=================" << endl;
 }
 
-void test_apply(Sheet sh) {
+void addOne(int& i){
+	i += 1;
+}
+
+void test_apply(Sheet  sh){
 	sh.print();
 	cout << "-----------------" << endl;
-
-	sh.sapply("col3", [](string& si){ reverse(si.begin(), si.end());});
+	
+	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
+	sh.iapply(0, addOne);
+	sh.dapply(1, [](double& i){i += 1;});
+	sh.sapply(2, [](string& str){str = str.substr(1);});
+	
 	sh.print();
-
+	cout << "=================" << endl;
 }
 
 int main(){
@@ -195,10 +203,10 @@ int main(){
 	// get row/ column
 	//test_getRow(sh);
 	//test_getCol(sh);
-
-	// Filter
-	// test_mask(sh);
-
-	// Apply
+	// get_mask
+	test_mask(sh);
+	
+	// apply
 	test_apply(sh);
+	
 }
