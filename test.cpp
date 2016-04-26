@@ -122,13 +122,37 @@ void test_sort(Sheet sh){
 	cout << "=================" << endl;
 }
 
+bool largerThanOne(int n) {
+	return (n > 1);
+}
+
+bool smallerThanThree(int n) {
+	return (n < 3);
+}
+
+bool longerThanTwo(string str) {
+	return (str.size() > 2);
+}
+
 void test_mask(Sheet sh){
 	sh.print();
 	cout << "-----------------" << endl;
 	
+	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
+	Sheet f1 = sh.filter(sh.iselect(0, largerThanOne));
+	Sheet f2 = sh.filter(sh.dselect(1, largerThanOne));
+	Sheet f3 = sh.filter(sh.sselect(2, longerThanTwo));
 	
+	Sheet f_str1 = sh.filter(sh.iselect("col1", largerThanOne)&&sh.iselect(0, smallerThanThree));
+	Sheet f_str2 = sh.filter(sh.dselect("col2", largerThanOne)||sh.dselect(1, [](double d){return (d == 0);}));
+	Sheet f_str3 = sh.filter(!sh.sselect("col3", longerThanTwo));
+
 	
-	sh.print();
+	f_str1.print();
+	cout << "-----------------" << endl;
+	f_str2.print();
+	cout << "-----------------" << endl;
+	f_str3.print();
 	cout << "=================" << endl;
 }
 
@@ -161,5 +185,8 @@ int main(){
 	// get row/ column
 	test_getRow(sh);
 	test_getCol(sh);
+	
+	// get_mask
+	test_mask(sh);
 	
 }

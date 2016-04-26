@@ -874,7 +874,7 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 }
 
 // filter by mask
-Sheet Sheet::filter(vector<bool>& vb) {
+Sheet Sheet::filter(const vector<bool>& vb) {
 	vector<int> indices;
 	for (auto r = 0; r < vb.size(); ++r) {
 		if (vb[r]) indices.push_back(r);
@@ -882,23 +882,30 @@ Sheet Sheet::filter(vector<bool>& vb) {
 	return get_row(indices);
 }
 
-// Get mask function
-template <typename Function>
-vector<bool> Sheet::get_mask(int col, Function fn){
+// Operator overloading for vector<bool>
+vector<bool> operator&&(const vector<bool>& mask1, const vector<bool>& mask2){
+	assert(mask1.size() == mask2.size());
 	vector<bool> result;
-	ColumnHead& ch = columns.at(col);
-	switch (ch.flag) {
-		case 0:
-			for (auto& r : ch.vint) result.push_back(fn(r));
-			break;
-		case 1:
-			for (auto& r : ch.vdouble) result.push_back(fn(r));
-			break;
-		case 2:
-			for (auto& r : ch.vstring) result.push_back(fn(r));
-			break;
-		default:
-			throw "Unexpected type";
+	for (int i = 0; i < mask1.size() ; ++i) {
+		result.push_back(mask1[i] && mask2[i]);
+	}
+	return result;
+}
+
+vector<bool> operator||(const vector<bool>& mask1, const vector<bool>& mask2){
+	assert(mask1.size() == mask2.size());
+	vector<bool> result;
+	for (int i = 0; i < mask1.size() ; ++i) {
+		result.push_back(mask1[i] || mask2[i]);
+	}
+	return result;
+}
+
+vector<bool> operator!(const vector<bool>& mask1){
+	
+	vector<bool> result;
+	for (int i = 0; i < mask1.size() ; ++i) {
+		result.push_back(!mask1[i]);
 	}
 	return result;
 }
