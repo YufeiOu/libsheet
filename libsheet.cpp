@@ -11,7 +11,7 @@
 #include <typeinfo>
 using namespace std;
 
-// General Utility
+/*** Utility function ***/
 string trim(string& str)
 {
 	if (!str.size()) return str;
@@ -42,11 +42,12 @@ int get_type(const string& input) {
 		return found_dot ? 1 : 2;
 	}
 }
+/*** End of utility function ***/
 
-// Contructor related function
-void load_data(Sheet& sheet, const string& path, bool header) {
+/*** Construction of Sheet ***/ 
+void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, double NAN_double, string NAN_string) {
 	ifstream in(path);
-	
+
 	if (in.is_open())
 	{
 		string line;
@@ -61,6 +62,8 @@ void load_data(Sheet& sheet, const string& path, bool header) {
 				column_name.push_back( trim(s) );
 			}
 		}
+
+
 		
 		if ( !getline(in, line) ) throw "No data";
 		iss.clear();
@@ -73,8 +76,14 @@ void load_data(Sheet& sheet, const string& path, bool header) {
 			if(!header) column_name.push_back("c" + to_string(t++));
 			data.push_back( trim(s) );
 		}
+
+
 		
 		Sheet new_sheet(data, column_name);
+        // set default values
+      	new_sheet.set_NAN_int(NAN_int);
+      	new_sheet.set_NAN_double(NAN_double);
+      	new_sheet.set_NAN_string(NAN_string);
 		
 		while ( getline (in,line) ) {
 			iss.clear();
@@ -121,7 +130,7 @@ Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
 	}
 }
 
-/* ---append functions--- */
+/* ---Append functions--- */
 /* row append - 1/2 (sheet) */
 // to-do
 
@@ -132,13 +141,16 @@ void Sheet::row_append(vector<string> &new_row) {
 	for (auto &r : new_row) {
 		switch (ch->flag) {
 			case 0:
-				ch->vint.push_back(stoi(r));
+                if (r.size()) ch->vint.push_back(stoi(r));
+          		else ch->vint.push_back(NAN_int);
 				break;
 			case 1:
-				ch->vdouble.push_back(stod(r));
+          		if (r.size()) ch->vdouble.push_back(stod(r));
+				else ch->vdouble.push_back(NAN_double);
 				break;
 			case 2:
-				ch->vstring.push_back(r);
+				if (r.size()) ch->vstring.push_back(r);
+          		else ch->vstring.push_back(NAN_string);
 				break;
 			default:
 				throw "Unexpected input type";
@@ -513,6 +525,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 	return new_sheet;
 }
 
+/* get_row, get_col */
 Sheet Sheet::get_row(const vector<int>& rows) {
 	Sheet new_sheet;
 	for (auto c = columns.begin(); c != columns.end(); ++c) {
@@ -596,7 +609,8 @@ Sheet Sheet::get_column(const vector<string>& cols){
 	return new_sheet;
 }
 
-void Sheet::print(bool header) {
+/*** print sheet ****/
+void Sheet::print(bool header, bool show_NAN) {
 	if (!columns.size()) return;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	
@@ -611,15 +625,27 @@ void Sheet::print(bool header) {
 		for (auto c = 0; c < columns.size();  ++c) {
 			switch (columns[c].flag) {
 				case 0:
-					cout << columns[c].vint[r];
+              	{
+              		int& i = columns[c].vint[r]; 
+              		if (isNAN(i) && show_NAN) cout << "NAN";
+					else cout << i;
 					break;
-				case 1:
-					cout << columns[c].vdouble[r];
+                }
+                case 1:
+              	{
+              		double& d = columns[c].vdouble[r];
+              		if (isNAN(d)  && show_NAN ) cout << "NAN";
+					else cout << d;
 					break;
-				case 2:
-					cout << columns[c].vstring[r];
+                }
+                case 2:
+              	{
+              		string& s = columns[c].vstring[r];
+              		if (isNAN(s)  && show_NAN ) cout << "NAN";
+					else cout << s;
 					break;
-				default:
+                }
+                default:
 					throw "Unexpected type";
 			}
 			if (c < columns.size() - 1) cout << ", ";
@@ -628,6 +654,7 @@ void Sheet::print(bool header) {
 	}
 }
 
+/*** set functions ****/
 void Sheet::set(const int& row, const int& col, const int& value) {
 	int col_id = col;
 	int type_flag{columns.at(col_id).flag};
@@ -873,7 +900,7 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 	}
 }
 
-// filter by mask
+/**** Filter by mask ****/
 Sheet Sheet::filter(const vector<bool>& vb) {
 	vector<int> indices;
 	for (auto r = 0; r < vb.size(); ++r) {
@@ -882,7 +909,7 @@ Sheet Sheet::filter(const vector<bool>& vb) {
 	return get_row(indices);
 }
 
-// Operator overloading for vector<bool>
+/* Operator overloading for vector<bool> */
 vector<bool> operator&&(const vector<bool>& mask1, const vector<bool>& mask2){
 	assert(mask1.size() == mask2.size());
 	vector<bool> result;
