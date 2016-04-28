@@ -47,7 +47,7 @@ int get_type(const string& input) {
 /*** Construction of Sheet ***/
 void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, double NAN_double, string NAN_string) {
 	ifstream in(path);
-	
+
 	if (in.is_open())
 	{
 		string line;
@@ -62,6 +62,8 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 				column_name.push_back( trim(s) );
 			}
 		}
+
+
 		
 		
 		
@@ -76,10 +78,13 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 			if(!header) column_name.push_back("c" + to_string(t++));
 			data.push_back( trim(s) );
 		}
+
+
 		
 		
 		
 		Sheet new_sheet(data, column_name);
+		
 		// set default values
 		new_sheet.set_NAN_int(NAN_int);
 		new_sheet.set_NAN_double(NAN_double);

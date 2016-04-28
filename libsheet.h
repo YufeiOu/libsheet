@@ -47,14 +47,14 @@ public:
 	/** Get sub-sheet by mask **/
 	Sheet filter(const vector<bool>& vb);
 	
-	void print(bool header = true, bool show_NAN = true);
+    void print(bool header = true, bool show_NAN = true);
 	
-	void set(const int &y, const int& x, const int &value);
-	void set(const int &y, const int& x, const double &value);
-	void set(const int &y, const int& x, const string &value);
-	void set(const int &y, const string& x, const int &value);
-	void set(const int &y, const string& x, const double &value);
-	void set(const int &y, const string& x, const string &value);
+    void set(const int &y, const int& x, const int &value);
+    void set(const int &y, const int& x, const double &value);
+    void set(const int &y, const int& x, const string &value);
+    void set(const int &y, const string& x, const int &value);
+    void set(const int &y, const string& x, const double &value);
+    void set(const int &y, const string& x, const string &value);
 	
 	Sheet get(const int& row, const vector<string>& cols);
 	Sheet get(const int& row, const vector<int>& cols);
@@ -169,9 +169,9 @@ vector<bool> operator!(const vector<bool>& mask1);
 /*********** Definition of template function *****************/
 template <typename T>
 void reorder(const vector<int>& indices, vector<T>& vec) {
-	vector<T> new_vec;
-	for (int i = 0; i < indices.size(); ++i) {
-		new_vec.push_back(vec.at(indices.at(i)));
+    vector<T> new_vec;
+    for (int i = 0; i < indices.size(); ++i) {
+    	new_vec.push_back(vec.at(indices.at(i)));
 	}
 	vec = new_vec;
 }
