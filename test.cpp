@@ -210,14 +210,16 @@ void test_apply(Sheet sh){
 	
 	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
 	sh.iapply(0, addOne);
-	sh.dapply(1, [](double& i){ return i/2; });
-	sh.sapply(2, [](string& str){str = str.substr(1); return str;});
+	sh.dapply(1, [](double& i){ i=i/2; });
+	sh.sapply(2, [](string& str){str = str.substr(1);});
 	
 	sh.print();
 	cout << "==============================================" << endl;
 }
 
 void test_getvector(Sheet sh){
+	sh.print();
+	cout << "------------------ Test: getvector ------------------" << endl;
 	vector<int> ish = sh.get_ivec(0);
 	vector<int> ish2 = sh.get_ivec("col1");
 	cout << ish[0] << " " << ish[1] << " " << ish[2] << endl;
@@ -230,6 +232,7 @@ void test_getvector(Sheet sh){
 	vector<string> ssh2 = sh.get_svec("col3");
 	cout << ssh[0] << " " << ssh[1] << " " << ssh[2] << endl;
 	cout << ssh2[0] << " " << ssh2[1] << " " << ssh2[2] << endl;
+	cout << "==============================================" << endl;
 }
 
 int main(){
@@ -279,5 +282,8 @@ int main(){
 
 	// filter
 	test_filter(sh);
+
+	// getvector
+	test_getvector(sh);
 	
 }

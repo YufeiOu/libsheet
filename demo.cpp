@@ -36,10 +36,16 @@ int main() {
 	*/
 
 	// if user want to pick certain information as there data, we can easily handle this:
-	vector<double> user_data ＝ get_dvec("SCORE");
-	//sort(user_data);
-	double m = user_data[0];
-	cout << m << endl;
+	/*
+	auto user_data = sh.get_dvec("SCORE");
+	sort(user_data.begin(),user_data.end()); // now we are in non-libsheet C++ world!
+	for(auto scores:user_data) cout << scores << " ";
+	*/
 
+	// Now the teacher wants to enhance 5 points to everyone's score:
+	/*
+	sh.dapply("SCORE",[](double& score){ score=min(100.0,score+5);});
+	sh.print();
+	*/
 
 }
