@@ -11,7 +11,7 @@
 #include <typeinfo>
 using namespace std;
 
-// General Utility
+/*** Utility function ***/
 string trim(string& str)
 {
 	if (!str.size()) return str;
@@ -42,9 +42,10 @@ int get_type(const string& input) {
 		return found_dot ? 1 : 2;
 	}
 }
+/*** End of utility function ***/
 
-// Contructor related function
-void load_data(Sheet& sheet, const string& path, bool header) {
+/*** Construction of Sheet ***/
+void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, double NAN_double, string NAN_string) {
 	ifstream in(path);
 	
 	if (in.is_open())
@@ -62,6 +63,8 @@ void load_data(Sheet& sheet, const string& path, bool header) {
 			}
 		}
 		
+		
+		
 		if ( !getline(in, line) ) throw "No data";
 		iss.clear();
 		iss.str(line);
@@ -74,7 +77,13 @@ void load_data(Sheet& sheet, const string& path, bool header) {
 			data.push_back( trim(s) );
 		}
 		
+		
+		
 		Sheet new_sheet(data, column_name);
+		// set default values
+		new_sheet.set_NAN_int(NAN_int);
+		new_sheet.set_NAN_double(NAN_double);
+		new_sheet.set_NAN_string(NAN_string);
 		
 		while ( getline (in,line) ) {
 			iss.clear();
@@ -121,7 +130,7 @@ Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
 	}
 }
 
-/* ---append functions--- */
+/* ---Append functions--- */
 /* row append - 1/2 (sheet) */
 // to-do
 
@@ -132,13 +141,16 @@ void Sheet::row_append(vector<string> &new_row) {
 	for (auto &r : new_row) {
 		switch (ch->flag) {
 			case 0:
-				ch->vint.push_back(stoi(r));
+				if (r.size()) ch->vint.push_back(stoi(r));
+				else ch->vint.push_back(NAN_int);
 				break;
 			case 1:
-				ch->vdouble.push_back(stod(r));
+				if (r.size()) ch->vdouble.push_back(stod(r));
+				else ch->vdouble.push_back(NAN_double);
 				break;
 			case 2:
-				ch->vstring.push_back(r);
+				if (r.size()) ch->vstring.push_back(r);
+				else ch->vstring.push_back(NAN_string);
 				break;
 			default:
 				throw "Unexpected input type";
@@ -149,10 +161,10 @@ void Sheet::row_append(vector<string> &new_row) {
 
 /* column append - 1/3 (new int cols) */
 void Sheet::col_append(vector<int> &new_col, const string & col_name) {
-	if (columns.size()) {
-		int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-		assert(row_len == new_col.size());
-	}
+	if (!columns.size()) throw string("Empty Sheet");
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	assert(row_len == new_col.size());
+	
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
 		throw "Duplicate column name at" + to_string(result.first->second);
@@ -164,10 +176,10 @@ void Sheet::col_append(vector<int> &new_col, const string & col_name) {
 
 /* column append - 2/3 (new double cols) */
 void Sheet::col_append(vector<double> &new_col, const string & col_name) {
-	if (columns.size()) {
-		int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-		assert(row_len == new_col.size());
-	}
+	if (!columns.size()) throw string("Empty Sheet");
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	assert(row_len == new_col.size());
+	
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
 		throw "Duplicate column name at" + to_string(result.first->second);
@@ -179,10 +191,10 @@ void Sheet::col_append(vector<double> &new_col, const string & col_name) {
 
 /* column append - 3/3 (new string cols) */
 void Sheet::col_append(vector<string> &new_col, const string & col_name) {
-	if (columns.size()) {
-		int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-		assert(row_len == new_col.size());
-	}
+	if (!columns.size()) throw string("Empty Sheet");
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	assert(row_len == new_col.size());
+	
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
 		throw "Duplicate column name at" + to_string(result.first->second);
@@ -205,11 +217,7 @@ void Sheet::col_erase(int col) {
 
 /* column erase - 2/4 (1 col_name) */
 void Sheet::col_erase(const string& col) {
-	int col_id;
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	col_id = got->second;
+	int col_id = col_idx(col);
 	
 	column_map.erase(col);
 	columns.erase(columns.begin() + col_id);
@@ -239,6 +247,8 @@ void Sheet::col_erase(const vector<int>& col) {
 
 /* row erase - 1/2 */
 void Sheet::row_erase(int row) {
+	if (!columns.size()) throw "Index out of boudanry";
+	if (row >= max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size())) throw "Index out of boundary";
 	for (auto &c : columns) {
 		switch (c.flag) {
 			case 0:
@@ -268,11 +278,7 @@ void Sheet::row_erase(vector<int>& rows) {
 
 /* ---Get functions--- */
 Sheet Sheet::get(const int& row, const string& col) {
-	int col_id;
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	col_id = got->second;
+	int col_id = col_idx(col);
 	
 	string col_name{columns.at(col_id).column_name};
 	int type_flag{columns.at(col_id).flag};
@@ -365,10 +371,7 @@ Sheet Sheet::get(const int& row, const vector<string>& cols) {
 	Sheet new_sheet;
 	int col_id;
 	for ( auto i = cols.begin(); i != cols.end(); ++i) {
-		auto got = column_map.find(*i);
-		if (got == column_map.end())
-			throw "No such column";
-		col_id = got->second;
+		col_id = col_idx(*i);
 		string col_name{columns.at(col_id).column_name};
 		int type_flag{columns.at(col_id).flag};
 		ColumnHead ch = ColumnHead(col_name, type_flag);
@@ -424,11 +427,7 @@ Sheet Sheet::get(const vector<int>& rows, const int& col) {
 
 Sheet Sheet::get(const vector<int>& rows, const string& col) {
 	
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	int col_id = got->second;
-	
+	int col_id = col_idx(col);
 	string col_name{columns.at(col_id).column_name};
 	int type_flag{columns.at(col_id).flag};
 	
@@ -459,10 +458,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<string>& cols) {
 	Sheet new_sheet;
 	int col_id;
 	for ( auto i = cols.begin(); i != cols.end(); ++i) {
-		auto got = column_map.find(*i);
-		if (got == column_map.end())
-			throw "No such column";
-		col_id = got->second;
+		col_id = col_idx(*i);
 		
 		string col_name{columns.at(col_id).column_name};
 		int type_flag{columns.at(col_id).flag};
@@ -513,6 +509,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 	return new_sheet;
 }
 
+/* get_row, get_col */
 Sheet Sheet::get_row(const vector<int>& rows) {
 	Sheet new_sheet;
 	for (auto c = columns.begin(); c != columns.end(); ++c) {
@@ -536,7 +533,8 @@ Sheet Sheet::get_row(const vector<int>& rows) {
 	return new_sheet;
 }
 
-Sheet Sheet::get_column(const vector<int>& cols){
+Sheet Sheet::get_col(const vector<int>& cols){
+	if (!columns.size()) throw string("Empty sheet.");
 	Sheet new_sheet;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	for (auto c = 0; c < cols.size(); ++c) {
@@ -563,16 +561,13 @@ Sheet Sheet::get_column(const vector<int>& cols){
 	return new_sheet;
 }
 
-Sheet Sheet::get_column(const vector<string>& cols){
+Sheet Sheet::get_col(const vector<string>& cols){
+	if (!columns.size()) throw string("Empty sheet.");
 	Sheet new_sheet;
 	int col_id;
-	
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	for (auto i = cols.begin(); i != cols.end(); ++i) {
-		auto got = column_map.find(*i);
-		if (got == column_map.end())
-			throw "No such column";
-		col_id = got->second;
+		col_id = col_idx(*i);
 		string col_name{columns.at(col_id).column_name};
 		int type_flag{columns.at(col_id).flag};
 		ColumnHead ch = ColumnHead(col_name, type_flag);
@@ -596,8 +591,9 @@ Sheet Sheet::get_column(const vector<string>& cols){
 	return new_sheet;
 }
 
-void Sheet::print(bool header) {
-	if (!columns.size()) return;
+/*** print sheet ****/
+void Sheet::print(bool header, bool show_NAN) {
+	if (!columns.size()) throw string("Empty Sheet");
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	
 	if (header) {
@@ -611,14 +607,26 @@ void Sheet::print(bool header) {
 		for (auto c = 0; c < columns.size();  ++c) {
 			switch (columns[c].flag) {
 				case 0:
-					cout << columns[c].vint[r];
+				{
+					int& i = columns[c].vint[r];
+					if (isNAN(i) && show_NAN) cout << "NAN";
+					else cout << i;
 					break;
+				}
 				case 1:
-					cout << columns[c].vdouble[r];
+				{
+					double& d = columns[c].vdouble[r];
+					if (isNAN(d)  && show_NAN ) cout << "NAN";
+					else cout << d;
 					break;
+				}
 				case 2:
-					cout << columns[c].vstring[r];
+				{
+					string& s = columns[c].vstring[r];
+					if (isNAN(s)  && show_NAN ) cout << "NAN";
+					else cout << s;
 					break;
+				}
 				default:
 					throw "Unexpected type";
 			}
@@ -628,6 +636,7 @@ void Sheet::print(bool header) {
 	}
 }
 
+/*** set functions ****/
 void Sheet::set(const int& row, const int& col, const int& value) {
 	int col_id = col;
 	int type_flag{columns.at(col_id).flag};
@@ -668,10 +677,7 @@ void Sheet::set(const int& row, const int& col, const string& value) {
 }
 
 void Sheet::set(const int& row, const string& col, const int& value) {
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	int col_id = got->second;
+	int col_id = col_idx(col);
 	int type_flag{columns[col_id].flag};
 	
 	switch (type_flag) {
@@ -684,10 +690,8 @@ void Sheet::set(const int& row, const string& col, const int& value) {
 }
 
 void Sheet::set(const int& row, const string& col, const double& value) {
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	int col_id = got->second;
+	
+	int col_id = col_idx(col);
 	int type_flag{columns[col_id].flag};
 	
 	switch (type_flag) {
@@ -700,10 +704,8 @@ void Sheet::set(const int& row, const string& col, const double& value) {
 }
 
 void Sheet::set(const int& row, const string& col, const string& value) {
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	int col_id = got->second;
+	
+	int col_id = col_idx(col);
 	int type_flag{columns[col_id].flag};
 	
 	switch (type_flag) {
@@ -714,6 +716,9 @@ void Sheet::set(const int& row, const string& col, const string& value) {
 			throw "Type does not match! Expect string";
 	}
 }
+
+/*** fillNAN ***/
+
 
 /* ---Algorithm--- */
 
@@ -795,11 +800,7 @@ void Sheet::sort_by_column(int col, bool descend) {
 /* sort 2/2 - by col_name */
 void Sheet::sort_by_column(const string& col, bool descend) {
 	vector<int> indices;
-	int col_id;
-	auto got = column_map.find(col);
-	if (got == column_map.end())
-		throw "No such column";
-	col_id = got->second;
+	int col_id = col_idx(col);
 	
 	switch (columns.at(col_id).flag) {
 		case 0:
@@ -873,7 +874,7 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 	}
 }
 
-// filter by mask
+/**** Filter by mask ****/
 Sheet Sheet::filter(const vector<bool>& vb) {
 	vector<int> indices;
 	for (auto r = 0; r < vb.size(); ++r) {
@@ -882,7 +883,7 @@ Sheet Sheet::filter(const vector<bool>& vb) {
 	return get_row(indices);
 }
 
-// Operator overloading for vector<bool>
+/* Operator overloading for vector<bool> */
 vector<bool> operator&&(const vector<bool>& mask1, const vector<bool>& mask2){
 	assert(mask1.size() == mask2.size());
 	vector<bool> result;

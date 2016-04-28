@@ -1,24 +1,25 @@
 #include <iostream>
+#include <functional>
 #include "libsheet.h"
 using namespace std;
 
-void test_colappend(Sheet &sh){
+void test_colappend(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "-------------- Test: colappend ---------------" << endl;
 	
-	vector<int> new_int_col{1, 2};
-	vector<double> new_double_col{1., 2.};
-	vector<string> new_str_col{"jefiwo", "dsf"};
+	vector<int> new_int_col{1, 2, 3};
+	vector<double> new_double_col{1., 2., 3.};
+	vector<string> new_str_col{"jefiwo", "dsf", "asdad"};
 	sh.col_append(new_int_col, "new");
 	sh.col_append(new_double_col, "newd");
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void test_colerase(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "---------------- Test: colerase ----------------" << endl;
 	
 	vector<int> int_cols{0, 2};
 	vector<string> str_cols{"col1"};
@@ -28,10 +29,13 @@ void test_colerase(Sheet sh){
 	//sh.col_erase(str_cols);
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void test_get(Sheet sh){
+	sh.print();
+	cout << "------------------ Test: get ------------------" << endl;
+	
 	Sheet element1 = sh.get(1, "col3");
 	Sheet element2 = sh.get(0, 0);
 	
@@ -48,38 +52,40 @@ void test_get(Sheet sh){
 	Sheet rows_cols1 = sh.get(new_rows, new_int_col);
 	Sheet rows_cols2 = sh.get(new_rows, new_str_col);
 	
+	
+	cout << "==============================================" << endl;
 }
 
 void test_getRow(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: getRow ------------------" << endl;
 	
 	vector<int> new_rows{0, 2};
 	Sheet rows = sh.get_row(new_rows);
 	
 	rows.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 	
 }
 
 void test_getCol(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: getCol ------------------" << endl;
 	
 	vector<int> new_cols{1, 2};
-	Sheet cols = sh.get_column(new_cols);
+	Sheet cols = sh.get_col(new_cols);
 	
 	vector<string> new_cols_str{"col1", "col3"};
-	Sheet cols2 = sh.get_column(new_cols_str);
+	Sheet cols2 = sh.get_col(new_cols_str);
 	
 	cols.print();
 	cols2.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void test_set(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: Set ------------------" << endl;
 	
 	sh.set(0, 0, 12345);
 	sh.set(0, 1, 12345.6789);
@@ -89,18 +95,18 @@ void test_set(Sheet sh){
 	sh.set(1, "col3", "set_a_different_string");
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void test_rowerase(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: rowerase ------------------" << endl;
 	
-	vector<int> rows{0, 3};
+	vector<int> rows{0};
 	sh.row_erase(rows);
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void test_reorder(){
@@ -114,12 +120,12 @@ void test_reorder(){
 
 void test_sort(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: sort ------------------" << endl;
 	
 	sh.sort_by_column("col1", true);
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 bool largerThanOne(int n) {
@@ -136,24 +142,24 @@ bool longerThanTwo(string str) {
 
 void test_mask(Sheet sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: mask -------------------" << endl;
 	
 	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
 	Sheet f1 = sh.filter(sh.iselect(0, largerThanOne));
 	Sheet f2 = sh.filter(sh.dselect(1, largerThanOne));
 	Sheet f3 = sh.filter(sh.sselect(2, longerThanTwo));
 	
+	
 	Sheet f_str1 = sh.filter(sh.iselect("col1", largerThanOne)&&sh.iselect(0, smallerThanThree));
 	Sheet f_str2 = sh.filter(sh.dselect("col2", largerThanOne)||sh.dselect(1, [](double d){return (d == 0);}));
 	Sheet f_str3 = sh.filter(!sh.sselect("col3", longerThanTwo));
-
 	
 	f_str1.print();
 	cout << "-----------------" << endl;
 	f_str2.print();
 	cout << "-----------------" << endl;
 	f_str3.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 void addOne(int& i){
@@ -162,47 +168,50 @@ void addOne(int& i){
 
 void test_apply(Sheet  sh){
 	sh.print();
-	cout << "-----------------" << endl;
+	cout << "------------------ Test: apply ------------------" << endl;
 	
 	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
 	sh.iapply(0, addOne);
-	sh.dapply(1, [](double& i){i += 1;});
+	//sh.sapply(1, [](string& i){ reverse(i.begin(), i.end()); });
 	sh.sapply(2, [](string& str){str = str.substr(1);});
 	
 	sh.print();
-	cout << "=================" << endl;
+	cout << "==============================================" << endl;
 }
 
 int main(){
 	Sheet sh;
 	string s = "/Users/mcchu/Documents/16S-C++/libsheet/test.txt";
 	load_data(sh, s, true);
+	cerr << "Done loading data..." << endl;
 	
 	// col_append example
-	//test_colappend(sh);
+	test_colappend(sh);
 	
 	// col_erase example
-	//test_colerase(sh);
+	test_colerase(sh);
 	
 	// get example
-	//test_get(sh);
-
+	test_get(sh);
+	
 	// set example
-	//test_set(sh);
+	test_set(sh);
 	
 	// reorder
-	//test_reorder();
+	test_reorder();
 	
 	// row_erase
-	//test_rowerase(sh);
-	
+	try {
+		test_rowerase(sh);
+	} catch(const string& s) {
+		cerr << s << endl;
+	}
 	// sort
-	//test_sort(sh);
+	test_sort(sh);
 	
 	// get row/ column
-	//test_getRow(sh);
-	//test_getCol(sh);
-	
+	test_getRow(sh);
+	test_getCol(sh);
 	// get_mask
 	test_mask(sh);
 	
