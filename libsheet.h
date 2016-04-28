@@ -53,7 +53,7 @@ public:
 	Sheet filter(const vector<bool>& vb);
 	
     void print(bool header = true, const string& nan_symbol = "NAN"); // cout print
-  	void print(const string& file_path, bool header = true, const string& nan_symbol = "NAN"); // dump data
+  	void print(const char* file_path, bool header = true, const string& nan_symbol = "NAN"); // dump data
 	
     void set(const int &y, const int& x, const int &value);
     void set(const int &y, const int& x, const double &value);
