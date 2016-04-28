@@ -236,7 +236,11 @@ int main(){
 	Sheet sh;
 	string s = "test.txt";
 	load_data(sh, s, true, "2");
-	sh.print("/Users/ouyufei/Desktop/C++/proj/test_output.txt");
+	try {
+		sh.print("test_output.txt");
+	} catch(const string& s) {
+		cerr << s << endl;
+	}
 	cerr << "Done loading data..." << endl;
 	cerr << "------------------------------------- test begins -------------------------------------------------------- " << endl;
 	

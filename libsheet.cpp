@@ -757,7 +757,7 @@ void Sheet::print(bool header, const string& nan_symbol) {
 }
 
 /*** Print funciton to a file***/
-void Sheet::print(const string& file_path, bool header, const string& nan_symbol) {
+void Sheet::print(const char* file_path, bool header, const string& nan_symbol) {
 	ofstream os;
   	os.open(file_path, ofstream::out);
   	if (os.fail()) throw string("Can not open file");
@@ -1099,5 +1099,6 @@ vector<bool> operator!(const vector<bool>& mask1){
 	}
 	return result;
 }
+
 
 
