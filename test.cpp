@@ -1,5 +1,4 @@
 #include <iostream>
-#include <functional>
 #include "libsheet.h"
 using namespace std;
 
@@ -52,6 +51,12 @@ void test_get(Sheet sh){
 	Sheet rows_cols1 = sh.get(new_rows, new_int_col);
 	Sheet rows_cols2 = sh.get(new_rows, new_str_col);
 	
+	cols1.print();
+	cols2.print();
+	rows1.print();
+	rows2.print();
+	rows_cols1.print();
+	rows_cols2.print();
 	
 	cout << "==============================================" << endl;
 }
@@ -163,6 +168,14 @@ void test_mask(Sheet sh){
 	cout << "==============================================" << endl;
 }
 
+void test_select(Sheet sh) {
+
+}
+
+void test_filter(Sheet sh) {
+	
+}
+
 void addOne(int& i){
 	i += 1;
 }
@@ -173,7 +186,7 @@ void test_apply(Sheet  sh){
 	
 	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
 	sh.iapply(0, addOne);
-	//sh.sapply(1, [](string& i){ reverse(i.begin(), i.end()); });
+	sh.dapply(1, [](double& i){ i/2; });
 	sh.sapply(2, [](string& str){str = str.substr(1);});
 	
 	sh.print();
@@ -182,7 +195,7 @@ void test_apply(Sheet  sh){
 
 int main(){
 	Sheet sh;
-	string s = "/Users/mcchu/Documents/16S-C++/libsheet/test.txt";
+	string s = "test.txt";
 	load_data(sh, s, true);
 	cerr << "Done loading data..." << endl;
 	
