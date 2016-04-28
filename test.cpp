@@ -130,6 +130,8 @@ void test_sort(Sheet sh){
 	sh.sort_by_column("col1", true);
 	
 	sh.print();
+	sh.sort_by_column("col3");
+	sh.print();
 	cout << "==============================================" << endl;
 }
 
@@ -169,35 +171,74 @@ void test_mask(Sheet sh){
 }
 
 void test_select(Sheet sh) {
-
+	sh.print();
+	cout << "------------------ Test: select ------------------" << endl;
+	vector<bool> ib = sh.iselect(0,[](int i){return i==2;});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	ib = sh.dselect(1,[](double i){return i>2;});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	ib = sh.sselect(2,[](string i){return i=="her";});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	ib = sh.iselect("col1",[](int i){return i!=2;});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	ib = sh.dselect("col2",[](double i){return i<=2;});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	ib = sh.sselect("col3",[](string i){return i!="her";});
+	cout << ib[0] << " " << ib[1] << " " << ib[2] << endl;
+	
+	sh.print();
+	cout << "==============================================" << endl;
 }
 
 void test_filter(Sheet sh) {
+	sh.print();
+	cout << "------------------ Test: filter ------------------" << endl;
 	
+	Sheet filterSheet = sh.filter(sh.iselect(0,[](int i){return i==2;}));
+	
+	filterSheet.print();
+	cout << "==============================================" << endl;
 }
 
 void addOne(int& i){
 	i += 1;
 }
 
-void test_apply(Sheet  sh){
+void test_apply(Sheet sh){
 	sh.print();
 	cout << "------------------ Test: apply ------------------" << endl;
 	
 	// vector<bool> mask1 = sh.iselect(0, largerThanTwo);
 	sh.iapply(0, addOne);
-	sh.dapply(1, [](double& i){ i/2; });
-	sh.sapply(2, [](string& str){str = str.substr(1);});
+	sh.dapply(1, [](double& i){ return i/2; });
+	sh.sapply(2, [](string& str){str = str.substr(1); return str;});
 	
 	sh.print();
 	cout << "==============================================" << endl;
 }
 
+void test_getvector(Sheet sh){
+	vector<int> ish = sh.get_ivec(0);
+	vector<int> ish2 = sh.get_ivec("col1");
+	cout << ish[0] << " " << ish[1] << " " << ish[2] << endl;
+	cout << ish2[0] << " " << ish2[1] << " " << ish2[2] << endl;
+	vector<double> dsh = sh.get_dvec(1);
+	vector<double> dsh2 = sh.get_dvec("col2");
+	cout << dsh[0] << " " << dsh[1] << " " << dsh[2] << endl;
+	cout << dsh2[0] << " " << dsh2[1] << " " << dsh2[2] << endl;
+	vector<string> ssh = sh.get_svec(2);
+	vector<string> ssh2 = sh.get_svec("col3");
+	cout << ssh[0] << " " << ssh[1] << " " << ssh[2] << endl;
+	cout << ssh2[0] << " " << ssh2[1] << " " << ssh2[2] << endl;
+}
+
 int main(){
 	Sheet sh;
 	string s = "test.txt";
-	load_data(sh, s, true);
+	load_data(sh, s, true, "2");
+	sh.print("/Users/ouyufei/Desktop/C++/proj/test_output.txt");
 	cerr << "Done loading data..." << endl;
+	cerr << "------------------------------------- test begins -------------------------------------------------------- " << endl;
 	
 	// col_append example
 	test_colappend(sh);
@@ -232,5 +273,11 @@ int main(){
 	
 	// apply
 	test_apply(sh);
+
+	// select
+	test_select(sh);
+
+	// filter
+	test_filter(sh);
 	
 }

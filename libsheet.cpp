@@ -9,6 +9,7 @@
 #include <sstream>
 #include <algorithm>
 #include <typeinfo>
+#include <fstream>
 using namespace std;
 
 /*** Utility function ***/
@@ -17,7 +18,8 @@ string trim(string& str)
 	if (!str.size()) return str;
 	size_t first = str.find_first_not_of(' ');
 	size_t last = str.find_last_not_of(' ');
-	return str.substr(first, (last-first+1));
+	if (first == string::npos && last == string::npos) return "";
+  	return str.substr(first, (last-first+1));
 }
 
 int get_type(const string& input) {
@@ -44,8 +46,8 @@ int get_type(const string& input) {
 }
 /*** End of utility function ***/
 
-/*** Construction of Sheet ***/
-void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, double NAN_double, string NAN_string) {
+/*** Construction of Sheet ***/ 
+void load_data(Sheet& sheet, const string& path, bool header, const string& NAN_symbol) {
 	ifstream in(path);
 
 	if (in.is_open())
@@ -54,7 +56,7 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 		istringstream iss;
 		vector<string> column_name;
 		if (header) { // first line is column name
-			if (!getline(in, line)) throw "No first line";
+			if (!getline(in, line)) throw string("No first line");
 			iss.str(line);
 			while (iss){
 				string s;
@@ -63,11 +65,7 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 			}
 		}
 
-
-		
-		
-		
-		if ( !getline(in, line) ) throw "No data";
+		if ( !getline(in, line) ) throw string("No data");
 		iss.clear();
 		iss.str(line);
 		int t = 0;
@@ -75,20 +73,10 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 		while (iss){
 			string s;
 			if ( !getline( iss, s, ',' )) break;
-			if(!header) column_name.push_back("c" + to_string(t++));
+			if(!header) column_name.push_back("col" + to_string(t++));
 			data.push_back( trim(s) );
 		}
-
-
-		
-		
-		
-		Sheet new_sheet(data, column_name);
-		
-		// set default values
-		new_sheet.set_NAN_int(NAN_int);
-		new_sheet.set_NAN_double(NAN_double);
-		new_sheet.set_NAN_string(NAN_string);
+		Sheet new_sheet(data, column_name, NAN_symbol);
 		
 		while ( getline (in,line) ) {
 			iss.clear();
@@ -99,15 +87,15 @@ void load_data(Sheet& sheet, const string& path, bool header, int NAN_int, doubl
 				if ( !getline( iss, s, ',' )) break;
 				data.push_back( trim(s) );
 			}
-			new_sheet.row_append(data);
+			new_sheet.row_append(data, NAN_symbol);
 		}
 		in.close();
 		sheet = move(new_sheet);
 	}
-	else cout << "no file open" << endl;
+	else throw string("No file open");
 }
 
-Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
+Sheet::Sheet(vector<string>& entry, vector<string>& col_names, const string& nan_symbol) {
 	assert(entry.size() == col_names.size()); // assume every entry is provided a column name
 	auto j = col_names.begin();
 	for (auto i = entry.begin(); i != entry.end(); ++i, ++j) {
@@ -115,19 +103,31 @@ Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
 		ColumnHead ch(*j, type);
 		auto result = column_map.insert(pair<string, unsigned int>(*j, i - entry.begin()));
 		if (!result.second) {
-			throw "Duplicate column name at" + to_string(i - entry.begin());
+			throw string("Duplicate column name at" + to_string(i - entry.begin()));
 		}
 		switch (type) {
 			case 0:
-				ch.vint.push_back(stoi(*i));
+          	{
+          		if (*i == nan_symbol) ch.vint.push_back(NAN_int);
+                else if (i->size()) ch.vint.push_back(stoi(*i));
+          		else ch.vint.push_back(NAN_int);
 				break;
-			case 1:
-				ch.vdouble.push_back(stod(*i));
+            }
+            case 1:
+          	{	
+          		if (*i == nan_symbol) ch.vdouble.push_back(NAN_double);
+                else if (i->size()) ch.vdouble.push_back(stod(*i));
+          		else ch.vdouble.push_back(NAN_double);
 				break;
-			case 2:
-				ch.vstring.push_back(*i);
+            }
+            case 2:
+          	{
+              	if (*i == nan_symbol) ch.vstring.push_back(NAN_string);
+                else if (i->size()) ch.vstring.push_back(*i);
+          		else ch.vstring.push_back(NAN_string);
 				break;
-			default:
+            }
+            default:
 				throw "Unexpected input type";
 		}
 		
@@ -137,28 +137,115 @@ Sheet::Sheet(vector<string>& entry, vector<string>& col_names) {
 
 /* ---Append functions--- */
 /* row append - 1/2 (sheet) */
-// to-do
+void Sheet::row_append(Sheet& new_sheet){
+	// The original Sheet is empty
+	if (!columns.size()) {
+		columns = new_sheet.columns;
+		column_map = new_sheet.column_map;
+		return;
+	}
+	
+	// The original Sheet is not empty
+	assert(new_sheet.columns.size() == columns.size()); // check column size consistency
+	for (size_t i = 0; i < columns.size() ; ++i) {
+		assert(columns[i].flag == new_sheet.columns[i].flag); //check type consistency
+	}
+	
+	for (auto c1 = columns.begin(), c2 = new_sheet.columns.begin(); c1 != columns.end(); ++c1, ++c2) {
+		switch(c1->flag){
+			case 0:
+				c1->vint.insert(c1->vint.end(), c2->vint.begin(), c2->vint.end());
+				break;
+			case 1:
+				c1->vdouble.insert(c1->vdouble.end(), c2->vdouble.begin(), c2->vdouble.end());
+				break;
+			case 2:
+				c1->vstring.insert(c1->vstring.end(), c2->vstring.begin(), c2->vstring.end());
+				break;
+			default:
+				throw string("Unexpected input type");
+		}
+	}
+}
+
+/* col append - 2/2 (sheet) */
+void Sheet::col_append(Sheet& new_col){
+	if (new_col.columns.size() == 0) return;
+	if (columns.size()) assert(max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size()) == max(max(new_col.columns[0].vint.size(), new_col.columns[0].vdouble.size()), new_col.columns[0].vstring.size()));
+	string col_name;
+	// check if no duplicate column name
+	for (size_t i = 0; i < new_col.columns.size(); ++i) {
+		col_name = new_col.columns[i].column_name;
+		auto map_itr = column_map.find(col_name);
+		if (map_itr != column_map.end()) throw string("Duplicate column name at" + col_name);
+	}
+	
+	for (size_t i = 0; i < new_col.columns.size(); ++i) {
+		
+		switch(new_col.columns[i].flag){
+			case 0:{
+				ColumnHead ch(new_col.columns[i].column_name, 0);
+				ch.vint = new_col.columns[i].vint;
+				columns.push_back(ch);
+				break;
+			}
+			case 1:{
+				ColumnHead ch(new_col.columns[i].column_name, 1);
+				ch.vdouble = new_col.columns[i].vdouble;
+				columns.push_back(ch);
+				break;
+			}
+			case 2:{
+				ColumnHead ch(new_col.columns[i].column_name, 2);
+				ch.vstring = new_col.columns[i].vstring;
+				columns.push_back(ch);
+				break;
+			}
+			default:
+				throw string("Unexpected input type");
+		}
+	}
+}
 
 /* row append - 2/2 (new_rows) */
-void Sheet::row_append(vector<string> &new_row) {
-	assert(new_row.size() == columns.size());
+void Sheet::row_append(vector<string> &new_row, const string& nan_symbol) {
+  	// Original Sheet is empty
+  	if (!columns.size()) {
+      	vector<string> names;
+      	for (int i = 0; i < new_row.size() ; ++i) names.push_back("col" + to_string(i));
+      	Sheet new_sheet{new_row, names};
+      	row_append(new_sheet);
+      	return;
+  	}
+  	
+  	// Original Sheet is not empty
+	assert(new_row.size() == columns.size()); // check column size consistency
 	auto ch = columns.begin();
 	for (auto &r : new_row) {
 		switch (ch->flag) {
 			case 0:
-				if (r.size()) ch->vint.push_back(stoi(r));
-				else ch->vint.push_back(NAN_int);
+          	{	
+          		if (r == nan_symbol) ch->vint.push_back(NAN_int);
+                else if (r.size()) ch->vint.push_back(stoi(r));
+          		else ch->vint.push_back(NAN_int);
 				break;
-			case 1:
-				if (r.size()) ch->vdouble.push_back(stod(r));
+            }
+            case 1:
+          	{
+          		if (r == nan_symbol) ch->vdouble.push_back(NAN_double);
+          		else if (r.size()) ch->vdouble.push_back(stod(r));
 				else ch->vdouble.push_back(NAN_double);
 				break;
-			case 2:
-				if (r.size()) ch->vstring.push_back(r);
-				else ch->vstring.push_back(NAN_string);
+            }
+            case 2:
+          	{
+          		if (r == nan_symbol) ch->vstring.push_back(NAN_string);
+				else if (r.size()) ch->vstring.push_back(r);
+          		else ch->vstring.push_back(NAN_string);
 				break;
-			default:
-				throw "Unexpected input type";
+            }
+            default:
+				throw string("Unexpected input type");
 		}
 		++ch;
 	}
@@ -166,13 +253,11 @@ void Sheet::row_append(vector<string> &new_row) {
 
 /* column append - 1/3 (new int cols) */
 void Sheet::col_append(vector<int> &new_col, const string & col_name) {
-	if (!columns.size()) throw string("Empty Sheet");
-	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-	assert(row_len == new_col.size());
+    if (columns.size()) assert(max(max(columns.at(0).vint.size(), columns.at(0).vdouble.size()), columns.at(0).vstring.size()) == new_col.size());
 	
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
-		throw "Duplicate column name at" + to_string(result.first->second);
+		throw string("Duplicate column name at") + to_string(result.first->second);
 	}
 	ColumnHead ch(col_name, 0);
 	ch.vint = new_col;
@@ -181,13 +266,11 @@ void Sheet::col_append(vector<int> &new_col, const string & col_name) {
 
 /* column append - 2/3 (new double cols) */
 void Sheet::col_append(vector<double> &new_col, const string & col_name) {
-	if (!columns.size()) throw string("Empty Sheet");
-	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-	assert(row_len == new_col.size());
+    if (columns.size()) assert(max(max(columns.at(0).vint.size(), columns.at(0).vdouble.size()), columns.at(0).vstring.size()) == new_col.size());
 	
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
-		throw "Duplicate column name at" + to_string(result.first->second);
+		throw string("Duplicate column name at") + to_string(result.first->second);
 	}
 	ColumnHead ch(col_name, 1);
 	ch.vdouble = new_col;
@@ -196,13 +279,11 @@ void Sheet::col_append(vector<double> &new_col, const string & col_name) {
 
 /* column append - 3/3 (new string cols) */
 void Sheet::col_append(vector<string> &new_col, const string & col_name) {
-	if (!columns.size()) throw string("Empty Sheet");
-	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
-	assert(row_len == new_col.size());
-	
+	if (columns.size()) assert(max(max(columns.at(0).vint.size(), columns.at(0).vdouble.size()), columns.at(0).vstring.size()) == new_col.size());
+  
 	auto result = column_map.insert(pair<string, unsigned int>(col_name, columns.size()));
 	if (!result.second) {
-		throw "Duplicate column name at" + to_string(result.first->second);
+		throw string("Duplicate column name at") + to_string(result.first->second);
 	}
 	ColumnHead ch(col_name, 2);
 	ch.vstring = new_col;
@@ -252,8 +333,8 @@ void Sheet::col_erase(const vector<int>& col) {
 
 /* row erase - 1/2 */
 void Sheet::row_erase(int row) {
-	if (!columns.size()) throw "Index out of boudanry";
-	if (row >= max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size())) throw "Index out of boundary";
+  	if (!columns.size()) throw string("Index out of boudanry");
+  	if (row >= max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size())) throw string("Index out of boundary");
 	for (auto &c : columns) {
 		switch (c.flag) {
 			case 0:
@@ -266,7 +347,7 @@ void Sheet::row_erase(int row) {
 				c.vstring.erase(c.vstring.begin() + row);
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 	}
 }
@@ -302,7 +383,7 @@ Sheet Sheet::get(const int& row, const string& col) {
 			ch.vstring.push_back(columns.at(col_id).vstring.at(row));
 			break;
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	
 	Sheet new_sheet;
@@ -331,7 +412,7 @@ Sheet Sheet::get(const int& row, const int& col) {
 			ch.vstring.push_back(columns.at(col_id).vstring.at(row));
 			break;
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	
 	Sheet new_sheet;
@@ -362,7 +443,7 @@ Sheet Sheet::get(const int& row, const vector<int>& cols) {
 				ch.vstring.push_back(columns.at(*i).vstring.at(row));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		
 		
@@ -392,7 +473,7 @@ Sheet Sheet::get(const int& row, const vector<string>& cols) {
 				ch.vstring.push_back(columns.at(col_id).vstring.at(row));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
@@ -421,7 +502,7 @@ Sheet Sheet::get(const vector<int>& rows, const int& col) {
 			for (auto &i : rows) ch.vstring.push_back(columns.at(col).vstring.at(i));
 			break;
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	
 	
@@ -431,7 +512,7 @@ Sheet Sheet::get(const vector<int>& rows, const int& col) {
 }
 
 Sheet Sheet::get(const vector<int>& rows, const string& col) {
-	
+
 	int col_id = col_idx(col);
 	string col_name{columns.at(col_id).column_name};
 	int type_flag{columns.at(col_id).flag};
@@ -452,7 +533,7 @@ Sheet Sheet::get(const vector<int>& rows, const string& col) {
 			for (auto i : rows) ch.vstring.push_back(columns.at(col_id).vstring.at(i));
 			break;
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	new_sheet.columns.push_back(ch);
 	new_sheet.column_map.insert(pair<string, unsigned int>(col_name, 0));
@@ -480,7 +561,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<string>& cols) {
 				for (auto &r: rows) ch.vstring.push_back(columns.at(col_id).vstring.at(r));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
@@ -506,7 +587,7 @@ Sheet Sheet::get(const vector<int>& rows, const vector<int>& cols) {
 				for (auto &r: rows) ch.vstring.push_back(columns.at(*i).vstring.at(r));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
@@ -530,7 +611,7 @@ Sheet Sheet::get_row(const vector<int>& rows) {
 				for (auto& r : rows) ch.vstring.push_back(c->vstring.at(r));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(c->column_name, c - columns.begin()));
@@ -539,7 +620,7 @@ Sheet Sheet::get_row(const vector<int>& rows) {
 }
 
 Sheet Sheet::get_col(const vector<int>& cols){
-	if (!columns.size()) throw string("Empty sheet.");
+    if (!columns.size()) throw string("Empty sheet.");
 	Sheet new_sheet;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	for (auto c = 0; c < cols.size(); ++c) {
@@ -558,7 +639,7 @@ Sheet Sheet::get_col(const vector<int>& cols){
 				for (auto r = 0; r < row_len; ++r) ch.vstring.push_back(columns.at(cols.at(c)).vstring.at(r));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, c));
@@ -567,7 +648,7 @@ Sheet Sheet::get_col(const vector<int>& cols){
 }
 
 Sheet Sheet::get_col(const vector<string>& cols){
-	if (!columns.size()) throw string("Empty sheet.");
+    if (!columns.size()) throw string("Empty sheet.");
 	Sheet new_sheet;
 	int col_id;
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
@@ -588,7 +669,7 @@ Sheet Sheet::get_col(const vector<string>& cols){
 				for (auto r = 0; r < row_len; ++r) ch.vstring.push_back(columns.at(col_id).vstring.at(r));
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 		new_sheet.columns.push_back(ch);
 		new_sheet.column_map.insert(pair<string, unsigned int>(col_name, i - cols.begin()));
@@ -596,8 +677,42 @@ Sheet Sheet::get_col(const vector<string>& cols){
 	return new_sheet;
 }
 
+/* get-vector functions */
+vector<int> Sheet::get_ivec(const int& col_id) {
+    assert(columns[col_id].flag == 0); 
+    return columns[col_id].vint;
+}
+
+vector<double> Sheet::get_dvec(const int& col_id) {
+    assert(columns[col_id].flag == 1); 
+    return columns[col_id].vdouble;
+}
+
+vector<string> Sheet::get_svec(const int& col_id) {
+    assert(columns[col_id].flag == 2); 
+    return columns[col_id].vstring;
+}
+
+vector<int> Sheet::get_ivec(const string& col_name) {
+    int col_id = col_idx(col_name);
+    assert(columns[col_id].flag == 0); 
+    return columns[col_id].vint;
+}
+
+vector<double> Sheet::get_dvec(const string& col_name) {
+    int col_id = col_idx(col_name);
+    assert(columns[col_id].flag == 1); 
+    return columns[col_id].vdouble;
+}
+
+vector<string> Sheet::get_svec(const string& col_name) {
+    int col_id = col_idx(col_name);
+    assert(columns[col_id].flag == 2); 
+    return columns[col_id].vstring;
+}
+
 /*** print sheet ****/
-void Sheet::print(bool header, bool show_NAN) {
+void Sheet::print(bool header, const string& nan_symbol) {
 	if (!columns.size()) throw string("Empty Sheet");
 	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
 	
@@ -612,34 +727,85 @@ void Sheet::print(bool header, bool show_NAN) {
 		for (auto c = 0; c < columns.size();  ++c) {
 			switch (columns[c].flag) {
 				case 0:
-				{
-					int& i = columns[c].vint[r];
-					if (isNAN(i) && show_NAN) cout << "NAN";
+              	{
+              		int& i = columns[c].vint[r]; 
+              		if (isNAN(i)) cout << nan_symbol;
 					else cout << i;
 					break;
-				}
-				case 1:
-				{
-					double& d = columns[c].vdouble[r];
-					if (isNAN(d)  && show_NAN ) cout << "NAN";
+                }
+                case 1:
+              	{
+              		double& d = columns[c].vdouble[r];
+              		if (isNAN(d)) cout << nan_symbol;
 					else cout << d;
 					break;
-				}
-				case 2:
-				{
-					string& s = columns[c].vstring[r];
-					if (isNAN(s)  && show_NAN ) cout << "NAN";
+                }
+                case 2:
+              	{
+              		string& s = columns[c].vstring[r];
+              		if (isNAN(s)) cout << nan_symbol;
 					else cout << s;
 					break;
-				}
-				default:
-					throw "Unexpected type";
+                }
+                default:
+					throw string("Unexpected type");
 			}
 			if (c < columns.size() - 1) cout << ", ";
 			else cout << endl;
 		}
 	}
 }
+
+/*** Print funciton to a file***/
+void Sheet::print(const string& file_path, bool header, const string& nan_symbol) {
+	ofstream os;
+  	os.open(file_path, ofstream::out);
+  	if (os.fail()) throw string("Can not open file");
+  	
+  	if (!columns.size()) throw string("Empty Sheet");
+	int row_len = max(max(columns[0].vint.size(), columns[0].vdouble.size()), columns[0].vstring.size());
+	
+	if (header) {
+		for (auto c = 0; c < columns.size() - 1;  ++c) {
+           os << columns[c].column_name << ", ";
+		}
+		os << columns[columns.size() - 1].column_name << endl;
+	}
+	
+	for (auto r = 0; r < row_len ; ++r) {
+		for (auto c = 0; c < columns.size();  ++c) {
+			switch (columns[c].flag) {
+				case 0:
+              	{
+              		int& i = columns[c].vint[r]; 
+              		if (isNAN(i)) os << nan_symbol;
+					else os << i;
+					break;
+                }
+                case 1:
+              	{
+              		double& d = columns[c].vdouble[r];
+              		if (isNAN(d)) os << nan_symbol;
+					else os << d;
+					break;
+                }
+                case 2:
+              	{
+              		string& s = columns[c].vstring[r];
+              		if (isNAN(s)) os << nan_symbol;
+					else os << s;
+					break;
+                }
+                default:
+					throw string("Unexpected type");
+			}
+			if (c < columns.size() - 1) os << ", ";
+			else os << endl;
+		}
+	}
+  	os.close();
+}
+
 
 /*** set functions ****/
 void Sheet::set(const int& row, const int& col, const int& value) {
@@ -651,7 +817,7 @@ void Sheet::set(const int& row, const int& col, const int& value) {
 			columns.at(col_id).vint.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect int";
+			throw string("Type does not match! Expect int");
 	}
 }
 
@@ -664,7 +830,7 @@ void Sheet::set(const int& row, const int& col, const double& value) {
 			columns.at(col_id).vdouble.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect double";
+			throw string("Type does not match! Expect double");
 	}
 }
 
@@ -677,7 +843,7 @@ void Sheet::set(const int& row, const int& col, const string& value) {
 			columns.at(col_id).vstring.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect string";
+			throw string("Type does not match! Expect string");
 	}
 }
 
@@ -690,12 +856,12 @@ void Sheet::set(const int& row, const string& col, const int& value) {
 			columns[col_id].vint.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect int";
+			throw string("Type does not match! Expect int");
 	}
 }
 
 void Sheet::set(const int& row, const string& col, const double& value) {
-	
+
 	int col_id = col_idx(col);
 	int type_flag{columns[col_id].flag};
 	
@@ -704,12 +870,12 @@ void Sheet::set(const int& row, const string& col, const double& value) {
 			columns[col_id].vdouble.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect double";
+			throw string("Type does not match! Expect double");
 	}
 }
 
 void Sheet::set(const int& row, const string& col, const string& value) {
-	
+
 	int col_id = col_idx(col);
 	int type_flag{columns[col_id].flag};
 	
@@ -718,11 +884,11 @@ void Sheet::set(const int& row, const string& col, const string& value) {
 			columns[col_id].vstring.at(row) = value;
 			break;
 		default:
-			throw "Type does not match! Expect string";
+			throw string("Type does not match! Expect string");
 	}
 }
 
-/*** fillNAN ***/
+/*** fillNAN ***/ 
 
 
 /* ---Algorithm--- */
@@ -735,8 +901,10 @@ void Sheet::sort_by_column(int col, bool descend) {
 		{
 			vector<int>& vi = columns.at(col).vint;
 			vector<pair<int,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vi.size() ; ++i) {
-				vp.push_back(make_pair(vi[i], i));
+              	if (isNAN(vi[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vi[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<int, int>>());
@@ -746,14 +914,17 @@ void Sheet::sort_by_column(int col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		case 1:
 		{
 			vector<double>& vd = columns.at(col).vdouble;
 			vector<pair<double,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vd.size() ; ++i) {
-				vp.push_back(make_pair(vd[i], i));
+              	if (isNAN(vd[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vd[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<double, int>>());
@@ -763,14 +934,17 @@ void Sheet::sort_by_column(int col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		case 2:
 		{
 			vector<string>& vs = columns.at(col).vstring;
 			vector<pair<string,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vs.size() ; ++i) {
-				vp.push_back(make_pair(vs[i], i));
+              	if (isNAN(vs[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vs[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<string, int>>());
@@ -780,10 +954,11 @@ void Sheet::sort_by_column(int col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	for (auto &c : columns) {
 		switch (c.flag) {
@@ -797,7 +972,7 @@ void Sheet::sort_by_column(int col, bool descend) {
 				reorder(indices, c.vstring);
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 	}
 }
@@ -812,8 +987,10 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 		{
 			vector<int>& vi = columns.at(col_id).vint;
 			vector<pair<int,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vi.size() ; ++i) {
-				vp.push_back(make_pair(vi[i], i));
+              	if (isNAN(vi[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vi[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<int, int>>());
@@ -823,14 +1000,17 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		case 1:
 		{
 			vector<double>& vd = columns.at(col_id).vdouble;
 			vector<pair<double,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vd.size() ; ++i) {
-				vp.push_back(make_pair(vd[i], i));
+              	if (isNAN(vd[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vd[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<double, int>>());
@@ -840,14 +1020,17 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		case 2:
 		{
 			vector<string>& vs = columns.at(col_id).vstring;
 			vector<pair<string,int> > vp;
+          	vector<int> nan_index;
 			for (size_t i = 0 ; i != vs.size() ; ++i) {
-				vp.push_back(make_pair(vs[i], i));
+              	if (isNAN(vs[i])) nan_index.push_back(i);
+				else vp.push_back(make_pair(vs[i], i));
 			}
 			if (descend) {
 				sort(vp.begin(), vp.end(), greater<pair<string, int>>());
@@ -857,10 +1040,11 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 			for (auto &p : vp) {
 				indices.push_back(p.second);
 			}
+            indices.insert(indices.end(), nan_index.begin(), nan_index.end());
 			break;
 		}
 		default:
-			throw "Unexpected type";
+			throw string("Unexpected type");
 	}
 	for (auto &c : columns) {
 		switch (c.flag) {
@@ -874,7 +1058,7 @@ void Sheet::sort_by_column(const string& col, bool descend) {
 				reorder(indices, c.vstring);
 				break;
 			default:
-				throw "Unexpected type";
+				throw string("Unexpected type");
 		}
 	}
 }
@@ -915,3 +1099,5 @@ vector<bool> operator!(const vector<bool>& mask1){
 	}
 	return result;
 }
+
+

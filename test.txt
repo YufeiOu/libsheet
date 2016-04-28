@@ -1,4 +1,4 @@
 col1, col2, col3
 2,  0.2, his
-1,  0., her
+1,, her
 3,  3., hi
