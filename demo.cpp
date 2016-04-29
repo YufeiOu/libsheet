@@ -8,11 +8,13 @@ int main() {
 	string file_path = "student.csv";
 	load_data(sh, file_path); // now sh is the sheet we want!
 	// easy print! -> sh.print(); 
+	// even better! we could print to any file in the disk!
 	/*
 	sh.sort_by_column("SCORE"); // from F to A
 	sh.print();
 	sh.sort_by_column("SCORE",true); // from A to F
 	sh.print();
+	sh.print("test_output.txt");
 	*/
 
 	// what if you want to select students whose SCORE > 80? 
@@ -29,10 +31,17 @@ int main() {
 
 	// what if we want SCORE>80 "and" GRADE==B? We have a precise way to express this, like SQL: 
 	/*
+	vector<string> attribute = {"STUDENTID","GRADE","SCORE"};
 	((sh.filter(
 		sh.dselect("SCORE",[](double score){return score > 80;}) && 
 		sh.sselect("GRADE",[](string grade){return grade == "B";}))
 	)).get_col(attribute).print();
+	*/
+
+	// Now the teacher wants to enhance 5 points to everyone's score:
+	/*
+	sh.dapply("SCORE",[](double& score){ score=min(100.0,score+5);});
+	sh.print();
 	*/
 
 	// if user want to pick certain information as there data, we can easily handle this:
@@ -42,10 +51,6 @@ int main() {
 	for(auto scores:user_data) cout << scores << " ";
 	*/
 
-	// Now the teacher wants to enhance 5 points to everyone's score:
-	/*
-	sh.dapply("SCORE",[](double& score){ score=min(100.0,score+5);});
-	sh.print();
-	*/
+	
 
 }
