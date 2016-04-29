@@ -127,7 +127,7 @@ public:
 
     int col_len() {
     	if (!columns.size()) return 0;
-    	return max(max(columns.at(0).vint.size(), columns.at(0).vdouble.size()), columns.at(0).vstring.size();
+    	return max(max(columns.at(0).vint.size(), columns.at(0).vdouble.size()), columns.at(0).vstring.size());
     }
 
     int row_len() { return columns.size(); }
