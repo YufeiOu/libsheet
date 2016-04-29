@@ -40,9 +40,20 @@ int main(int argc, char const *argv[])
 	auto t10 = std::chrono::high_resolution_clock::now();
 	sh1.sapply(1,[](string& s){reverse(s.begin(),s.end());});
 	auto t11 = std::chrono::high_resolution_clock::now();
-	cout << "Data apply time: " << (t5-t4).count()/1000000 << " ms" << endl;
+	cout << "Data apply time: " << (t11-t10).count()/1000000 << " ms" << endl;
 
-	
+
+	auto t12 = std::chrono::high_resolution_clock::now();
+	for (auto i=0; i<sh1.row_len(); i++) sh1.set(i,0,0);
+	auto t13 = std::chrono::high_resolution_clock::now();
+	cout << "Data set time: " << (t13-t12).count()/1000000 << " ms" << endl;
+
+	Sheet sh2;
+	load_data(sh2,"hotel_recommendation.csv");
+	auto t14 = std::chrono::high_resolution_clock::now();
+	sh2.row_append(sh2);
+	auto t15 = std::chrono::high_resolution_clock::now();
+	cout << "Data append time: " << (t15-t14).count()/1000000 << " ms" << endl;
 	
 	
 	return 0;

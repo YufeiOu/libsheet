@@ -13,10 +13,8 @@ int main() {
 	sh.sort_by_column("SCORE"); // from F to A
 	sh.print();
 	sh.sort_by_column("SCORE",true); // from A to F
-	sh.print();
 	sh.print("test_output.txt");
 	*/
-
 	// what if you want to select students whose SCORE > 80? 
 	/*
 	Sheet good_student = sh.filter(sh.dselect("SCORE",[](double score){return score > 80;}));
@@ -40,7 +38,7 @@ int main() {
 
 	// Now the teacher wants to enhance 5 points to everyone's score:
 	/*
-	sh.dapply("SCORE",[](double& score){ score=min(100.0,score+5);});
+	sh.dapply("SCORE",[](double& score){ score=max(100.0,score+5);});
 	sh.print();
 	*/
 
@@ -48,7 +46,7 @@ int main() {
 	/*
 	auto user_data = sh.get_dvec("SCORE");
 	sort(user_data.begin(),user_data.end()); // now we are in non-libsheet C++ world!
-	for(auto scores:user_data) cout << scores << " ";
+	for(auto scores:user_data) cout << scores << endl;
 	*/
 
 	
