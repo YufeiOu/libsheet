@@ -1,0 +1,126 @@
+This is an tutorial of how to use libsheet (https://github.com/YufeiOu/libsheet.git)
+
+Abstract: do you feel annoying open .csv file using Excel and pick some of them manually to a .txt file for your C++ program? If so, this library is just for you! A C++ user can easily read Excel spread sheet and use very convenient expression deal with them. Although for now we only support three types: int, double and std::string (string in short), it is enough for most of the case.
+
+User may find it a little bit strange at first to use different function just because the type is different (see example 3, 5, 6 in Usage), libsheet use different functions here to explicitly deal with different types.
+
+1. Download the library from Github: 
+	git clone https://github.com/YufeiOu/libsheet.git
+	You will see several .cpp files there, some of them are used for testing, so you can only keep lisbsheet.cpp and libsheet.h 
+
+2. Installation:
+	Let's assume your C++ program is sample.cpp, the way we use libsheet is very simple, you just need add
+	#include "libsheet.h"
+	at the beginning of sample.cpp, and compile in terminal as
+	$ g++ sample.cpp libsheet.cpp -std=c++11
+
+3. Usage: here is an example of sample.cpp, the sample dataset student.csv (1,000 students' grade, score, id and other information) is also in Github directory, we encourage you copy those to your C++ file and try them yourself.
+------------------------------- sample.cpp -------------------------------------------------------
+#include "libsheet.h"
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+int main() {
+	Sheet sh;
+	string file_path = "student.csv";
+	load_data(sh, file_path); // now sh is the sheet we want!
+
+	// example 1: the following code is used to simply print the whole dataset, either standard output or a file, of course the dataset is sorted by the member function of class Sheet "sort_by_column"
+	// easy print! -> sh.print(); 
+	// even better! we could print to any file in the disk!
+	/*
+	sh.sort_by_column("SCORE"); // from F to A
+	sh.print();
+	sh.sort_by_column("SCORE",true); // from A to F
+	sh.print("test_output.txt");
+	*/
+
+	// example 2: libsheet could easily select the rows you want, here we have two steps to do: first, select the rows we want and return a vector of boolean (the select function has three variances: iselect, dselect and sselect which is to select int, double and string column, respectively. if the size of column is N, the return value of select is a vector of boolean also with size N and an entry is true only if the result of lambda expression is true), second, according to this vector, filter member function modifies sheet and only keeps the "true" rows.
+	// what if you want to select students whose SCORE > 80? 
+	/*
+	Sheet good_student = sh.filter(sh.dselect("SCORE",[](double score){return score > 80;}));
+	good_student.print();
+	*/
+
+	// example 3: libsheet could also do projection easily, the member function get_col is used to keep the column you want, the input of get_col could be vector<int> or vector<string> the string is the name of those columns, and integer is the location of the columns. It is encouraged to use name rather than location, since it is more easy to remember.
+	// and only want to see ID, SCORE, and GRADE?
+	/*
+	vector<string> attribute = {"STUDENTID","GRADE","SCORE"};
+	((sh.filter(sh.dselect("SCORE",[](double score){return score > 80;}))).get_col(attribute)).print();
+	*/
+
+	// example 4: more complex selection. As we do in example 2, if we overload the &&, ||, ! to vector of boolean, then we filter the sheet by two return values of select function.
+	// what if we want SCORE>80 "and" GRADE==B? We have a precise way to express this, like SQL: 
+	/*
+	vector<string> attribute = {"STUDENTID","GRADE","SCORE"};
+	((sh.filter(
+		sh.dselect("SCORE",[](double score){return score > 80;}) && 
+		sh.sselect("GRADE",[](string grade){return grade == "B";}))
+	)).get_col(attribute).print();
+	*/
+
+	// example 5: the apply function (also has three variances: iapply, dapply and sapply which is to apply to int, double and string column, respectivel). All the element of that column will be changed according to the lambda expression. The apply functions are mean to change a column use a same pattern.
+	// Now if the teacher wants to enhance 5 points to everyone's score:
+	/*
+	sh.dapply("SCORE",[](double& score){ score=min(100.0,score+5);});
+	sh.print();
+	*/
+
+	// example 6: the get_vec function (also has three variances: get_ivec, get_dvec and get_svec which is to apply to int, double and string column, respectively). We use get_vec function to extract vector type from sheet type (for further use). After all, libsheet is a library designed for C++ user to communicate with cumbersome dataset, most of the time user just want to preprocess those dataset and pick the data they want for further use, this function is designed for this use.
+	// if user want to pick certain information as there data, we can easily handle this:
+	/*
+	auto user_data = sh.get_dvec("SCORE");
+	sort(user_data.begin(),user_data.end()); // now we are in non-libsheet C++ world!
+	for(auto scores:user_data) cout << scores << endl;
+	*/
+
+	// The most meaningful usages of libsheet are listed above, now it's time for you to create your own query and use those technics to deal with your own datasets!
+	/*
+		here start your own code...
+	*/
+}
+--------------------------- sample.cpp ends -----------------------------------------------------------
+
+4. Other useful member functions
+	A full description of those member functions could be read from the document, we mention them to give a general view of what our library could easily do.
+	Sheet get(rows, columns): give a vector of rows number and a vector of columns (either number or string), we return a sub-sheet
+	Sheet get_row(rows): same as get(rows, all_columns)
+	Sheet get_col(columns): same as get(all_rows, columns)
+
+	void set(row,column,new_value): set is different from get in two aspect: first the input can only be single row and column; second the value could be set to new_value only when the new_value has the same type of the original value.
+
+	int col_len(), row_len(): return the number of rows (col_len) and columns (row_len) of the sheet
+
+	Other modification functions: void row_append(), col_append(), row_erase(), col_erase(). Users can see the full description from the documents.
+
+
+5. Common errors and suggestions
+	a) If you cannot compile even the "HelloWorld" program (here is load_data), make sure you use g++ with flag -std=c++11 and also include libsheet.cpp. Besides that, make sure the file name and directory is correct.
+
+	b) When you want to write complex query, don't forget some member functions have a return type void (such as sort_by_column) rather than Sheet, avoid using this return value directly.
+
+	c) "get" member function can only return a Sheet type, even it has only one row one column, it is still type Sheet, if you want to access the data, please use get_ivec/get_dvec/get_svec.
+
+	d) Most of the functions has concealed parameter, if your dataset has missing value (NaN), you may want to know how to specify the parameters of those functions when they meet missing value. Generally, libsheet can regard anything you specify as missing value, the default value is empty string, sometimes you can also assign string "NaN" to be missing value. The default operation of member functions (if is ambiguous to missing value) is to "ignore" missing value. More information could be seen in document.
+
+	e) pick suitable function if you have i/d/s choice.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

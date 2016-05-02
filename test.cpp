@@ -238,7 +238,7 @@ void test_getvector(Sheet sh){
 int main(){
 	Sheet sh;
 	string s = "test.txt";
-	load_data(sh, s, true, "2");
+	load_data(sh, s, true);
 	try {
 		sh.print("test_output.txt");
 	} catch(const string& s) {
