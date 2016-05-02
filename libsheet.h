@@ -102,13 +102,13 @@ public:
 	void col_erase(const vector<int>& cols);
     void col_erase(const vector<string>& cols);
 	
-	void row_append(Sheet& new_sheet); // TODO
+	void row_append(Sheet& new_sheet);
 	void row_append(vector<string> &new_row, const string& NAN_symbol = "");
 	
 	void col_append(vector<int>& new_col, const string& col_name);
 	void col_append(vector<double>& new_col, const string& col_name);
 	void col_append(vector<string>& new_col, const string& col_name);
-  	void col_append(Sheet& new_col); // TODO
+  	void col_append(Sheet& new_col); 
 	
 	void sort_by_column(int col, bool descend = false);
 	void sort_by_column(const string& col, bool descend = false);

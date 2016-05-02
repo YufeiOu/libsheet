@@ -18,6 +18,7 @@ string trim(string& str)
 	if (!str.size()) return str;
 	size_t first = str.find_first_not_of(' ');
 	size_t last = str.find_last_not_of(' ');
+	// let space-only string be empty
 	if (first == string::npos && last == string::npos) return "";
   	return str.substr(first, (last-first+1));
 }
