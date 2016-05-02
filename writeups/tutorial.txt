@@ -1,5 +1,9 @@
 This is an tutorial of how to use libsheet (https://github.com/YufeiOu/libsheet.git)
 
+Abstract: do you feel annoying open .csv file using Excel and pick some of them manually to a .txt file for your C++ program? If so, this library is just for you! A C++ user can easily read Excel spread sheet and use very convenient expression deal with them. Although for now we only support three types: int, double and std::string (string in short), it is enough for most of the case.
+
+User may find it a little bit strange at first to use different function just because the type is different (see example 3, 5, 6 in Usage), libsheet use different functions here to explicitly deal with different types.
+
 1. Download the library from Github: 
 	git clone https://github.com/YufeiOu/libsheet.git
 	You will see several .cpp files there, some of them are used for testing, so you can only keep lisbsheet.cpp and libsheet.h 
@@ -78,7 +82,31 @@ int main() {
 }
 --------------------------- sample.cpp ends -----------------------------------------------------------
 
-4. 
+4. Other useful member functions
+	A full description of those member functions could be read from the document, we mention them to give a general view of what our library could easily do.
+	Sheet get(rows, columns): give a vector of rows number and a vector of columns (either number or string), we return a sub-sheet
+	Sheet get_row(rows): same as get(rows, all_columns)
+	Sheet get_col(columns): same as get(all_rows, columns)
+
+	void set(row,column,new_value): set is different from get in two aspect: first the input can only be single row and column; second the value could be set to new_value only when the new_value has the same type of the original value.
+
+	int col_len(), row_len(): return the number of rows (col_len) and columns (row_len) of the sheet
+
+	Other modification functions: void row_append(), col_append(), row_erase(), col_erase(). Users can see the full description from the documents.
+
+
+5. Common errors and suggestions
+	a) If you cannot compile even the "HelloWorld" program (here is load_data), make sure you use g++ with flag -std=c++11 and also include libsheet.cpp. Besides that, make sure the file name and directory is correct.
+
+	b) When you want to write complex query, don't forget some member functions have a return type void (such as sort_by_column) rather than Sheet, avoid using this return value directly.
+
+	c) "get" member function can only return a Sheet type, even it has only one row one column, it is still type Sheet, if you want to access the data, please use get_ivec/get_dvec/get_svec.
+
+	d) Most of the functions has concealed parameter, if your dataset has missing value (NaN), you may want to know how to specify the parameters of those functions when they meet missing value. Generally, libsheet can regard anything you specify as missing value, the default value is empty string, sometimes you can also assign string "NaN" to be missing value. The default operation of member functions (if is ambiguous to missing value) is to "ignore" missing value. More information could be seen in document.
+
+	e) pick suitable function if you have i/d/s choice.
+
+
 
 
 
