@@ -43,11 +43,11 @@ int main() {
 	*/
 
 	// if user want to pick certain information as there data, we can easily handle this:
-	/*
+	
 	auto user_data = sh.get_dvec("SCORE");
 	sort(user_data.begin(),user_data.end()); // now we are in non-libsheet C++ world!
 	for(auto scores:user_data) cout << scores << endl;
-	*/
+	
 
 	
 
