@@ -1,11 +1,4 @@
 // libsheet.h
-//================================
-/* Library name: libsheet
- * Contributors: Ming-Ching Chu, Liang-Chun Tsai, Yufei Ou
- * Release date: 2016-05-02
- */
-//================================
-
 #include <iostream>
 #include <functional>
 #include <unordered_map>
@@ -90,11 +83,22 @@ public:
   	vector<double> get_dvec(const string&); 
   	vector<string> get_svec(const string&);
   	
-  	// remove functions
+  	/*** Summary function ***/
+  	double get_mean(int& col); // TODO
+  	double get_mean(const string& col); // TODO
+  	double get_median(int& col); // TODO
+  	double get_median(const string& col); // TODO
+  	double get_max(int& col); // TODO
+  	double get_max(const string& col); // TODO
+  	double get_min(int& col); // TODO
+  	double get_min(const string& col); // TODO
+  	
 	void row_erase(int row);
 	void row_erase(vector<int> &rows);
+  
 	void col_erase(int col);
     void col_erase(const string &col);
+
 	void col_erase(const vector<int>& cols);
     void col_erase(const vector<string>& cols);
 	

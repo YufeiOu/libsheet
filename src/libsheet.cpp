@@ -1,11 +1,4 @@
 // libsheet.cpp
-//================================
-/* Library name: libsheet
- * Contributors: Ming-Ching Chu, Liang-Chun Tsai, Yufei Ou
- * Release date: 2016-05-02
- */
-//================================
-
 #include "libsheet.h"
 #include <iostream>
 #include <fstream>
