@@ -1,20 +1,20 @@
 This is an tutorial of how to use libsheet (https://github.com/YufeiOu/libsheet.git)
 
-Abstract: do you feel annoying open .csv file using Excel and pick some of them manually to a .txt file for your C++ program? If so, this library is just for you! A C++ user can easily read Excel spread sheet and use very convenient expression deal with them. Although for now we only support three types: int, double and std::string (string in short), it is enough for most of the case.
+Abstract: do you feel annoying opening .csv file using Excel and picking some of them manually to a .txt file for your C++ program? If so, this library is just for you! A C++ user can easily read Excel spread sheet and use very convenient expression deal with them. Although for now we only support three types: int, double and std::string (string in short), it is enough for most of the cases.
 
 User may find it a little bit strange at first to use different function just because the type is different (see example 3, 5, 6 in Usage), libsheet use different functions here to explicitly deal with different types.
 
 1. Download the library from Github: 
 	git clone https://github.com/YufeiOu/libsheet.git
-	You will see several .cpp files there, some of them are used for testing, so you can only keep lisbsheet.cpp and libsheet.h 
+	You will see several .cpp files, some of them are used for testing, so you can keep lisbsheet.cpp and libsheet.h only
 
 2. Installation:
-	Let's assume your C++ program is sample.cpp, the way we use libsheet is very simple, you just need add
+	Let's assume your C++ program is sample.cpp, the way we use libsheet is very simple, you just need to add
 	#include "libsheet.h"
 	at the beginning of sample.cpp, and compile in terminal as
 	$ g++ sample.cpp libsheet.cpp -std=c++11
 
-3. Usage: here is an example of sample.cpp, the sample dataset student.csv (1,000 students' grade, score, id and other information) is also in Github directory, we encourage you copy those to your C++ file and try them yourself.
+3. Usage: here is an example of sample.cpp, the sample dataset student.csv (1,000 students' grade, score, id and other information) is also included in Github directory, we encourage you copying the following code to your C++ program and try them yourself!
 ------------------------------- sample.cpp -------------------------------------------------------
 #include "libsheet.h"
 #include <vector>
@@ -83,16 +83,16 @@ int main() {
 --------------------------- sample.cpp ends -----------------------------------------------------------
 
 4. Other useful member functions
-	A full description of those member functions could be read from the document, we mention them to give a general view of what our library could easily do.
+	A full description of those member functions could be read from the document, we mention them here to give a general view of what our library could also easily achieve:
 	Sheet get(rows, columns): give a vector of rows number and a vector of columns (either number or string), we return a sub-sheet
 	Sheet get_row(rows): same as get(rows, all_columns)
 	Sheet get_col(columns): same as get(all_rows, columns)
 
-	void set(row,column,new_value): set is different from get in two aspect: first the input can only be single row and column; second the value could be set to new_value only when the new_value has the same type of the original value.
+	void set(row,column,new_value): set is different from get in two aspects: first the input can only be single row and column; second the value could be set to new_value only when the new_value has the same type of the original value.
 
 	int col_len(), row_len(): return the number of rows (col_len) and columns (row_len) of the sheet
 
-	Other modification functions: void row_append(), col_append(), row_erase(), col_erase(). Users can see the full description from the documents.
+	Other modification functions: void row_append(), col_append(), row_erase(), col_erase(). Users can see the full description of those functions from the document.
 
 
 5. Common errors and suggestions
@@ -102,7 +102,7 @@ int main() {
 
 	c) "get" member function can only return a Sheet type, even it has only one row one column, it is still type Sheet, if you want to access the data, please use get_ivec/get_dvec/get_svec.
 
-	d) Most of the functions has concealed parameter, if your dataset has missing value (NaN), you may want to know how to specify the parameters of those functions when they meet missing value. Generally, libsheet can regard anything you specify as missing value, the default value is empty string, sometimes you can also assign string "NaN" to be missing value. The default operation of member functions (if is ambiguous to missing value) is to "ignore" missing value. More information could be seen in document.
+	d) Most of the functions has concealed parameters, if your dataset has missing value (NaN), you may want to know how to specify the parameters of those functions when they meet missing value. Generally, libsheet can regard anything you specify as missing value, the default value is empty string, sometimes you can also assign string "NaN" to be missing value. The default operation of member functions (if is ambiguous to missing value) is to "ignore" missing value. More usage toward missing value could be seen in document.
 
 	e) pick suitable function if you have i/d/s choice.
 
