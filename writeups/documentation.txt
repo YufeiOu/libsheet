@@ -1,0 +1,342 @@
+libsheet (https://github.com/YufeiOu/libsheet.git)
+
+Library Usage
+=============
+  0. Overview
+  1. Sheet Initialization 
+  2. Selection
+      2.1 Index Selection 
+      2.2 Condition Selection
+  3. Value Assignment
+  4. Get raw data
+  5. Remove
+  6. Append  
+  7. Sort
+  8. Apply function
+  9. Dump data
+  10. Missing Value
+  11. Others
+
+0. Overview
+These functions and structures are declared in the header file
+'libsheet.h'.  You need to #include "libsheet.h" in your C/C++ source files and
+link your program with 'libsheet.cpp'. 
+
+1. Sheet Initialization
+Before you start using Sheet to analyze your data, you need to construct a Sheet instance. 
+And initialize or load the data into the Sheet.
+
+- Function: Sheet(){};
+  
+    This is the default constructor of Sheet. It will construct a totally empty Sheet.
+
+- Function: Sheet(vector<string>& entry, vector<string>& col_names, 
+                  const string& NAN_symbol = "");
+  
+    This function constructs a Sheet with single row according to the parameters.
+    
+    vector<string>& entry: represents the data that you want to input
+    vector<string>& col_names: represents the column names you want to assign to each data
+    const string& NAN_symbol: defines the string or const char* that would be treated as missing value
+
+- Function: void load_data(Sheet& sheet, const string& path, 
+                           bool header = true, const string& NAN_symbol = "");
+ 
+    This function constructs a Sheet from a plain text file given the file path. 
+
+    Sheet& sheet: reference of the Sheet for which you want to initialize.
+    const string& path: path to the plain text file.
+    bool header = true: indicate whether or not the first line in file is column name. 
+                        Default value is true.
+    const string& NAN_symbol = "": indicate whether or not the file contains missing value.
+                        Default value is "".
+
+2. Selection
+2.1. Index Selection
+
+Sheet provide a set of get function that allow user to get a sub Sheet from the original 
+Sheet. The return of these functions is a new Sheet with a copy of part of the original 
+Sheet. It should be noticed that it is not a reference (view) of the original Sheet.
+      
+- Function: Sheet get(const int& row, const vector<string>& cols);
+      Sheet get(const int& row, const vector<int>& cols);
+            Sheet get(const int& row, const string& col);
+      Sheet get(const int& row, const int& col);
+      Sheet get(const vector<int>& rows, const string& cols);
+      Sheet get(const vector<int>& rows, const int& cols);
+      Sheet get(const vector<int>& rows, const vector<string>& cols);
+      Sheet get(const vector<int>& rows, const vector<int>& cols);
+
+  These function have two input that referred to the two-dimension location of selected sub-Sheet.
+      
+    int row: indicates the row number.
+    vector<int> rows: indicate a set of row numbers, the order doesn't have to be in order.
+    int col: indicate the column number.
+    string col: Sheet support indexing using column name. 
+    vector<int> cols: indicate a set of column numbers, the order doesn't have to be in order. 
+    vector<string> cols: indicate a set of string names, the order also doesn't have to be in order.
+    
+    
+- Function: Sheet get_row(const int& row);
+          Sheet get_col(const int& col);
+          Sheet get_col(const string& col);
+          Sheet get_row(const vector<int>& rows);
+          Sheet get_col(const vector<int>& cols);
+            Sheet get_col(const vector<string>& cols);
+
+    These functions take in 1 argument and return a new Sheet contains of columns or rows, 
+    the argument indicates the indices of rows or columns that you want to get. Both get_col
+    and get_row supports column name and column id indexing. 
+    
+    The usage of the parameters is the same as the previous get functions.
+  
+2.2 Condition Selection
+
+Sheet provide a filter function that let the user to select a sub-Sheet according to 
+some conditions given by user. The condition should be defined by the select function.
+Multiple conditions can be combined together using logic operator '&&', '||', '!'.
+
+- Function: Sheet filter(const vector<bool>& vb);
+
+    The function takes "condition" defined by user and returned a new copy of the 
+    sub-Sheet that contains the rows with specific column that satisfied the conditions. 
+    The "condition" is defined by vb which works on specific columns and it should 
+    be the return value of either iselect/dselect/sselect depends on the type of the 
+    columns that the condition post on. These function is defined as below.  
+
+    // The condition works on integer column
+    vector<bool> iselect(int col, Function fn);
+    vector<bool> iselect(string col, Function fn);
+    // The condition works on double column
+    vector<bool> dselect(int col, Function fn);
+    vector<bool> dselect(string col, Function fn);
+    // The condition works on string column
+    vector<bool> sselect(int col, Function fn);
+    vector<bool> sselect(string col, Function fn);
+
+    where int col is the column number that you want the condition to work on; similarly, 
+    string col is the column name of the column. The condition is defined by Function fn, 
+    fn is a function object in C++. It can simply be a function name or using lambda
+    expression to define the function. Either way, the function should only take 1 
+    input argument that has the same type of data in the column that the condition
+    will work on. The return of this condition function should be boolean value.
+      
+    For example, a possible fn could be 
+      
+    bool largerThan3(int i) { return i > 3;}
+  
+    it can be passed into iselect as a condition on certain integer column as
+      
+    Sheet filter(iselect(Integer_col, largerThan3)) or using lambda expression
+    Sheet filter(iselect(Integer_col, [](int i){return i > 3;}))
+                         
+    It could also combine multiple conditions together using logic operator. 
+    
+    For example,
+ 
+    Sheet filter(iselect(Integer_col, [](int i){return i > 3;}) &&
+                 iselect(Integer_col, [](int i){return i < 5;})
+                 )
+    By doing so, it could select the rows with 4 at the column "Integer_col".
+    The other supported logic operator includes &&, ||, !.
+      
+    **Notice: There are three different types of select function which should 
+              be used according to the type of the column that the condition
+              works on. Also, the input type of fn should also be the same type
+              of that column. 
+
+3. Value Assignment
+You can update a single data value by set functions. Again, the target position
+can be accessed by column id or column name.
+
+- Function: void set(const int &y, const int& x, const int &value);
+            void set(const int &y, const int& x, const double &value);
+            void set(const int &y, const int& x, const string &value);
+            void set(const int &y, const string& x, const int &value);
+            void set(const int &y, const string& x, const double &value);
+            void set(const int &y, const string& x, const string &value);
+
+    This function will alter the data value stored in the calling Sheet.
+    const int &y: row index.
+    const int& x: column index.
+    const int/double/string &value: the new value that you want to set.
+
+4. Get row data
+If you would like to get data in it's original type, rather than wrapped in a sheet,
+you can get data in a specific column in its original type.
+
+- Function: vector<int> get_ivec(const int&); 
+            vector<double> get_dvec(const int&); 
+            vector<string> get_svec(const int&); 
+            vector<int> get_ivec(const string&); 
+            vector<double> get_dvec(const string&); 
+            vector<string> get_svec(const string&);
+
+    You should know the type of data stored in the column you are getting data from, and 
+    assign the function return value to a vector of the right type.
+
+    const int&: indexing by column id.
+    const string&: indexing by column name.
+
+5. Remove
+
+You can remove rows or columns of data in a Sheet.
+
+- Function: void row_erase(int row);
+          void row_erase(vector<int> &rows);
+          void col_erase(int col);
+            void col_erase(const string &col);
+          void col_erase(const vector<int>& cols);
+            void col_erase(const vector<string>& cols);
+
+    The input parameter takes in an integer or a vector of indices, which indicates delete on
+    a single row/column or multiple ones. Again, these functions support both column name and 
+    column id indexing.
+    
+    int row: a single row id.
+    vector<int> &rows: multiple row ids.
+    
+    int col/const string &col: a single column id.
+    const vector<int>& cols/const vector<string>& cols): multiple column ids.
+   
+6. Append
+    
+Sheet provide append functions for user to add a row or a column of data to a sheet. 
+The new rows/columns will always be append to the back.  
+
+- Function: void row_append(Sheet& new_sheet);
+          void row_append(vector<string> &new_row, const string& NAN_symbol = "")
+
+    These functions are used to append new data as a new row to the sheet. 
+    
+    Sheet& new_sheet: a sheet to append as a new row in the sheet.
+    vector<string> &new_row: raw data(in string type) to append as a new row in the sheet.
+    const string& NAN_symbol = "": user specified symbol that indicates nan value.
+                                   Default value: "".
+
+- Function: void col_append(Sheet& new_col); 
+            void col_append(vector<int>& new_col, const string& col_name);
+          void col_append(vector<double>& new_col, const string& col_name);
+          void col_append(vector<string>& new_col, const string& col_name);
+    
+    These functions are used to append new data as a new column to the sheet.
+    User should preprocess new data to their desired type before calling col_append, 
+    in other words, col_append append new columns as the same type as the input is.
+    
+    Sheet& new_col: a sheet to append as a new column in the sheet.
+    vector<int>& new_col/vector<double>& new_col/vector<string>& new_col: 
+            datas(in their type to be stored) to append as a new column in the sheet.
+    const string& col_name: column name of the new column.
+
+7. Sort
+
+Sheet let the user to reorder the rows according to the order in specified column.
+      
+- Function: void sort_by_column(int col, bool descend = false);
+            void sort_by_column(const string& col, bool descend = false);
+
+    int col: specified the column index that the reorder should according to.
+    string col: specified the column name that the reorder should according to.
+    bool descend: indicate the order of the sorting should be in descending order 
+                  or not.
+
+8. Apply function
+      
+Sheet provides a set of the function that let the user to apply a self-defined function
+on specific column.
+
+- Function: void iapply(int col, Function fn);
+            void dapply(int col, Function fn);
+            void sapply(int col, Function fn);
+            void iapply(const string& col, Function fn);
+            void dapply(const string& col, Function fn);
+            void sapply(const string& col, Function fn);
+    
+    The first parameter col is either column index or column name that let the user
+    to specified the column that the second parameter fn should applys on. 
+      
+    The function fn is a function object that should takes only one input argument.
+    The input argument of fn should be passed-by-reference and the type should be
+    the same type as the data in specified column. Also, there are three types of 
+    apply. 
+    
+    iapply works on the integer column and the input of fn should be integer reference
+    dapply works on the double column and the input of fn should be double reference
+    sapply works on the string column and the input of fn should be string reference.
+      
+    For example, it can reverse the string in certain column as
+      
+    sapply(col_s, [](string& s){std::reverse(s.begin(), s.end());})
+
+9. Dump data
+
+Sheet support dump data to std::cout and save to a file. 
+
+- Function: void print(bool header = true, const string& nan_symbol = "NAN");
+    
+    This function is used to dump data to std::cout, with some user specified preference.
+
+    bool header = true: true to print data with column name,
+                  false to print data without column name.
+    const string& nan_symbol = "NAN": user defined NaN symbol.
+
+- Function: void print(const char* file_path, bool header = true, 
+                       const string& nan_symbol = "NAN");
+
+    This function is used to create a new file and dump data into it. 
+  
+    const char* file_path: the file path to which the data to be dumped.
+    bool header = true: true to print data with column name,
+                  false to print data without column name.
+    const string& nan_symbol = "NAN": user defined NaN symbol.
+      
+10. Missing value
+      
+Sheet support missing value. For each primitive type that Sheet can store, there is one value 
+that represent "missing" in the data. It is defined in libsheet.h by 
+  
+#define NAN_int INT_MIN
+#define NAN_double NAN
+#define NAN_string ""
+  
+If the user wants to change these value it can only be changed from here. 
+As the missing value for integer is stored as INT_MIN, the user should be aware of 
+doing calculation on integer and create INT_MIN value. 
+
+Sheet also allows user to specify how to interpret the missing value in original txt file
+and input string. There are three functions in Sheet that read data in string format. 
+  
+1. Sheet(vector<string>& entry, vector<string>& col_names, 
+         const string& NAN_symbol = ""); (see Section 1)
+2. void row_append(vector<string> &new_row, 
+                   const string& NAN_symbol = ""); (see Section 6)
+3. void load_data(Sheet& sheet, const string& path, bool header = true, 
+                  const string& NAN_symbol = ""); (see section 1)
+
+In these three function, the parameter NAN_symbol indicates how the Sheet should interpret 
+"missing" in the original data. The default value is "", which means a real missing between two ",".
+The other possible choices is to define it as NA, nan, NaN, NAN. 
+  
+Similarly, the dump function also allows user to specify how to dump the missing value in print function.
+(See section 9)
+  
+Moreover, Sheet provides a utility function that allows user to decide whether 
+certain value will be treated as "missing" in the Sheet. 
+  
+- Function: bool isNAN(int i) {return i == NAN_int;}
+            bool isNAN(double d) {return isnan(d);}
+            bool isNAN(string s) { return s == NAN_string;}
+
+11. Others
+  
+- Function: int col_idx(const string& col);
+
+  return column id given a column name.
+  
+- Function: int row_len();
+  
+  return the number of rows in the Sheet.
+    
+- Function: int col_len();
+
+  return the number of columns in the Sheet.
